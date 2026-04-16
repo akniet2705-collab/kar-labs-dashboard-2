@@ -912,11 +912,12 @@ async function loadFromGoogleSheets(year){
   year = year || currentYear;
   document.getElementById("gsLoading").style.display = "flex";
   try {
-    const [refResp, dataResp, расходыResp, доходыResp] = await Promise.all([
+    const [refResp, dataResp, расходыResp, доходыResp, бюджетыResp] = await Promise.all([
       fetch(gsURL("Справочник")),
       fetch(gsURL(String(year))),
       fetch(gsURL("Расходы")),
-      fetch(gsURL("Доходы"))
+      fetch(gsURL("Доходы")),
+      fetch(gsURL("Бюджеты"))
     ]);
     if(!refResp.ok || !dataResp.ok) throw new Error("Ошибка загрузки");
     const [refText, dataText] = await Promise.all([refResp.text(), dataResp.text()]);
@@ -944,6 +945,21 @@ async function loadFromGoogleSheets(year){
         }
       });
     }));
+
+    // Загружаем бюджеты из листа "Бюджеты" (синхронизация между устройствами)
+    if(бюджетыResp && бюджетыResp.ok){
+      try{
+        const бюджетыText = await бюджетыResp.text();
+        const бюджетыRows = parseCSV(бюджетыText);
+        бюджетыRows.forEach(r => {
+          if(r.year && r.quarter && r.block && r.dir){
+            const key = `${r.year}::${r.quarter}::${r.block}::${r.dir}`;
+            quarterlyBudgets[key] = parseNum(r.budget);
+          }
+        });
+        console.log(`✅ Бюджеты загружены из Sheets: ${бюджетыRows.length} записей`);
+      } catch(re){ console.warn("⚠ Ошибка загрузки бюджетов:", re.message); }
+    }
     saveCustomBudgets();
     currentYear = year;
     document.getElementById("yearBadge").textContent = year;
@@ -1173,7 +1189,7 @@ function saveBudgetCell(inp, block, name){
   if(!isNaN(val) && val>=0){
     const q = _currentQ();
     setBudget(block, name, val);
-    postToSheets({ action: "updateBudget", block, dir: name, value: val, year: currentYear, quarter: q });
+    postToSheets({ action: "saveBudget", block, dir: name, value: val, year: currentYear, quarter: q });
   }
   syncAll();
 }
