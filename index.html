@@ -1002,12 +1002,9 @@ async function loadFromGoogleSheets(year){
               rateDate:  r.rateDate  || "",
               desc:      r.desc      || ""
             }));
-          // Merge: Google Sheets = источник правды + сохраняем локальные записи ещё не синхронизированные
-          const sheetIds = new Set(sheetExtras.filter(e=>e.id).map(e=>e.id));
-          const localOnly = extras.filter(e => e.id && !sheetIds.has(e.id));
-          extras = [...sheetExtras, ...localOnly];
+          extras = [...sheetExtras];
           saveExtras();
-          console.log(`✅ Расходы загружены из Sheets: ${sheetExtras.length} записей (+${localOnly.length} локальных)`);
+          console.log(`✅ Расходы загружены из Sheets: ${sheetExtras.length} записей`);
         }
       } catch(re){ console.warn("⚠ Ошибка загрузки расходов:", re.message); }
     }
@@ -1030,12 +1027,9 @@ async function loadFromGoogleSheets(year){
             usdRate: r.usdRate ? parseNum(r.usdRate) : null,
             rateDate: r.rateDate||""
           }));
-          // Merge по ID
-          const sheetIncIds = new Set(sheetIncomes.filter(e=>e.id).map(e=>e.id));
-          const localOnlyInc = incomes.filter(e => e.id && !sheetIncIds.has(e.id));
-          incomes = [...sheetIncomes, ...localOnlyInc];
+          incomes = [...sheetIncomes];
           saveIncomes();
-          console.log(`✅ Доходы загружены из Sheets: ${sheetIncomes.length} записей (+${localOnlyInc.length} локальных)`);
+          console.log(`✅ Доходы загружены из Sheets: ${sheetIncomes.length} записей`);
         }
       } catch(re){ console.warn("⚠ Ошибка загрузки доходов:", re.message); }
     }
