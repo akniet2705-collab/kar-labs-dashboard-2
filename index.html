@@ -951,13 +951,26 @@ async function loadFromGoogleSheets(year){
       try{
         const бюджетыText = await бюджетыResp.text();
         const бюджетыRows = parseCSV(бюджетыText);
-        бюджетыRows.forEach(r => {
-          if(r.year && r.quarter && r.block && r.dir){
-            const key = `${r.year}::${r.quarter}::${r.block}::${r.dir}`;
-            quarterlyBudgets[key] = parseNum(r.budget);
+        if(бюджетыRows.length > 0){
+          бюджетыRows.forEach(r => {
+            if(r.year && r.quarter && r.block && r.dir){
+              const key = `${r.year}::${r.quarter}::${r.block}::${r.dir}`;
+              quarterlyBudgets[key] = parseNum(r.budget);
+            }
+          });
+          console.log(`✅ Бюджеты загружены из Sheets: ${бюджетыRows.length} записей`);
+        } else {
+          // Лист "Бюджеты" пуст — одноразовая миграция: отправляем все локальные бюджеты
+          const toSync = Object.entries(quarterlyBudgets).filter(([,v]) => v > 0);
+          if(toSync.length > 0){
+            console.log(`📤 Миграция ${toSync.length} бюджетов в Google Sheets...`);
+            toSync.forEach(([key, budget]) => {
+              const [yr, q, bl, dr] = key.split("::");
+              if(yr && q && bl && dr) postToSheets({action:"saveBudget", year:yr, quarter:q, block:bl, dir:dr, value:budget});
+            });
+            showToast(`Бюджеты синхронизируются с облаком (${toSync.length} записей)...`, "info", 4000);
           }
-        });
-        console.log(`✅ Бюджеты загружены из Sheets: ${бюджетыRows.length} записей`);
+        }
       } catch(re){ console.warn("⚠ Ошибка загрузки бюджетов:", re.message); }
     }
     saveCustomBudgets();
