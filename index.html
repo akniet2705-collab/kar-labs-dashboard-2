@@ -1,0 +1,2319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Бюджет расходов 2026 — Компания 2</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; background: #f0f4f8; color: #222; font-size: 13px; }
+
+/* ── HEADER ── */
+.page-header {
+  background: linear-gradient(135deg,#1a3a0f 0%,#375623 60%,#4EA72A 100%);
+  color:#fff; padding:14px 24px;
+  display:flex; align-items:center; justify-content:space-between;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+.page-header .logo { font-size:22px; font-weight:900; letter-spacing:1px; }
+.page-header .subtitle { font-size:11px; opacity:.75; margin-top:2px; }
+.hdr-btns { display:flex; gap:8px; }
+
+/* ── TABS ── */
+.tab-nav {
+  background:#fff; border-bottom:2px solid #4EA72A;
+  display:flex; align-items:stretch; padding:0 24px; gap:2px;
+}
+.tab-btn {
+  padding:10px 20px; cursor:pointer; font-size:13px; font-weight:bold;
+  color:#666; border:none; background:none; border-bottom:3px solid transparent;
+  transition:all .2s; margin-bottom:-2px;
+}
+.tab-btn:hover { color:#375623; }
+.tab-btn.active { color:#375623; border-bottom-color:#4EA72A; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  background:#fff; border-bottom:1px solid #e0e0e0;
+  padding:8px 24px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.toolbar label { font-weight:bold; font-size:11px; color:#555; }
+.toolbar select, .toolbar input[type=text], .toolbar input[type=date] {
+  border:1px solid #ccc; border-radius:4px; padding:5px 8px; font-size:12px;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  background:#4EA72A; color:#fff; border:none; padding:6px 14px;
+  border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px;
+  transition:background .15s;
+}
+.btn:hover { background:#375623; }
+.btn-blue  { background:#2471a3; } .btn-blue:hover  { background:#1a5276; }
+.btn-red   { background:#c0392b; } .btn-red:hover   { background:#922b21; }
+.btn-gray  { background:#7f8c8d; } .btn-gray:hover  { background:#626e70; }
+.btn-sm { padding:4px 10px; font-size:11px; }
+
+/* ── CONTAINER ── */
+.container { padding:16px 24px; }
+
+/* ── CARDS ── */
+.cards-grid {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:12px; margin-bottom:16px;
+}
+.card {
+  background:#fff; border-radius:10px; padding:14px 16px;
+  border-left:5px solid #4EA72A; box-shadow:0 2px 6px rgba(0,0,0,.08);
+}
+.card.blue   { border-color:#2471a3; }
+.card.red    { border-color:#c0392b; }
+.card.orange { border-color:#e67e22; }
+.card.purple { border-color:#8e44ad; }
+.card-label  { font-size:11px; color:#888; margin-bottom:4px; }
+.card-value  { font-size:21px; font-weight:900; color:#222; }
+.card-sub    { font-size:11px; color:#aaa; margin-top:3px; }
+
+/* ── CHARTS ── */
+.charts-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+.chart-box  {
+  background:#fff; border-radius:10px; padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.08);
+}
+.chart-box h3 { font-size:12px; font-weight:bold; color:#375623; margin-bottom:10px; text-transform:uppercase; letter-spacing:.5px; }
+.chart-box canvas { max-height:210px; }
+
+/* ── SECTION ── */
+.section {
+  background:#fff; border-radius:10px; overflow:hidden;
+  box-shadow:0 2px 6px rgba(0,0,0,.08); margin-bottom:16px;
+}
+.section-head {
+  background:linear-gradient(90deg,#375623,#4EA72A);
+  color:#fff; padding:10px 16px; font-weight:bold; font-size:13px;
+  display:flex; justify-content:space-between; align-items:center;
+}
+.section-body { padding:14px 16px; }
+
+/* ── ADD FORM ── */
+.form-row  { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+.form-group { display:flex; flex-direction:column; gap:3px; }
+.form-group label { font-size:11px; font-weight:bold; color:#555; }
+.form-group input, .form-group select {
+  border:1px solid #ccc; border-radius:4px; padding:5px 8px; font-size:12px; min-width:130px;
+}
+.form-group input:focus, .form-group select:focus { outline:none; border-color:#4EA72A; }
+
+/* ── BUDGET TABLE ── */
+.bt { width:100%; border-collapse:collapse; }
+.bt th {
+  background:#375623; color:#fff; padding:8px 10px;
+  text-align:center; font-size:11px; border:1px solid #4EA72A; white-space:nowrap;
+}
+.bt td { padding:7px 10px; border:1px solid #e8e8e8; font-size:12px; }
+.bt tbody tr:nth-child(even) td { background:#f8f8f8; }
+.bt tbody tr:hover td { background:#e8f5e1; }
+.bt .block-cell {
+  background:#E2EFDA; font-weight:bold; color:#375623; text-align:center;
+  border-right:2px solid #4EA72A;
+}
+.bt .total-row td { background:#4EA72A !important; color:#fff !important; font-weight:bold; text-align:center; }
+.bt .grand-row td { background:#375623 !important; color:#fff !important; font-weight:bold; font-size:13px; text-align:center; }
+
+/* ── PROGRESS BAR ── */
+.pbar-bg  { background:#e0e0e0; border-radius:4px; height:7px; width:100%; min-width:70px; }
+.pbar     { background:#4EA72A; border-radius:4px; height:7px; transition:width .4s; }
+.pbar.over{ background:#c0392b; }
+
+/* ── СВОДКА TABLE ── */
+.sv { width:100%; border-collapse:collapse; font-size:12px; }
+.sv thead th {
+  position:sticky; top:0; z-index:2;
+  padding:10px 12px; text-align:left; font-size:11px; font-weight:bold;
+  border-bottom:2px solid #ddd; white-space:nowrap; cursor:pointer;
+  user-select:none; transition:background .15s;
+}
+.sv thead th:hover { opacity:.85; }
+.sv thead th .sort-icon { margin-left:4px; opacity:.5; }
+.sv tbody td { padding:8px 12px; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
+.sv tbody tr:hover td { background:#f5fdf0; }
+
+/* Квартал-бейдж */
+.q-badge {
+  display:inline-block; padding:2px 8px; border-radius:12px;
+  font-size:10px; font-weight:bold; white-space:nowrap;
+}
+.q1 { background:#dbeafe; color:#1e40af; }
+.q2 { background:#dcfce7; color:#166534; }
+.q3 { background:#fef9c3; color:#854d0e; }
+.q4 { background:#fce7f3; color:#9d174d; }
+
+/* Блок-тег */
+.block-tag {
+  display:inline-block; padding:2px 8px; border-radius:4px;
+  font-size:10px; font-weight:bold;
+}
+.tag-0 { background:#dcfce7; color:#166534; }
+.tag-1 { background:#dbeafe; color:#1e40af; }
+.tag-2 { background:#fef3c7; color:#92400e; }
+.tag-3 { background:#f3e8ff; color:#6b21a8; }
+
+/* Сумма-чип */
+.amt { font-weight:bold; color:#166534; }
+.amt.big { color:#1e40af; }
+
+/* Фильтр-панель сводки */
+.sv-filters {
+  display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  padding:10px 16px; background:#f8fdf5; border-bottom:1px solid #e0e0e0;
+}
+.sv-filters label { font-size:11px; font-weight:bold; color:#555; }
+.sv-filters select, .sv-filters input {
+  border:1px solid #ccc; border-radius:4px; padding:4px 8px; font-size:12px;
+}
+.badge-count {
+  background:#4EA72A; color:#fff; font-size:10px; font-weight:bold;
+  padding:1px 7px; border-radius:10px; margin-left:6px;
+}
+
+/* Пустое состояние */
+.empty-state {
+  text-align:center; padding:40px; color:#bbb;
+}
+.empty-state .empty-icon { font-size:40px; margin-bottom:8px; }
+.empty-state p { font-size:13px; }
+
+/* Итоговая строка сводки */
+.sv-total { background:#f0fdf4; font-weight:bold; }
+.sv-total td { border-top:2px solid #4EA72A; color:#166534; }
+
+/* Нумерация */
+.row-num { color:#bbb; font-size:11px; text-align:center; }
+
+.num    { text-align:right; font-variant-numeric:tabular-nums; }
+.center { text-align:center; }
+
+footer { text-align:center; padding:14px; color:#bbb; font-size:11px; }
+
+/* ── СПРАВОЧНИК ── */
+.ref-block-card {
+  background:#fff; border-radius:10px; margin-bottom:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.08); overflow:hidden;
+}
+.ref-block-head {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 16px; font-weight:bold; font-size:13px; color:#fff;
+}
+.ref-block-body { padding:12px 16px; }
+.ref-dir-table { width:100%; border-collapse:collapse; }
+.ref-dir-table th {
+  background:#f5f5f5; padding:7px 10px; text-align:left;
+  font-size:11px; color:#666; border-bottom:1px solid #eee; font-weight:bold;
+}
+.ref-dir-table td { padding:7px 10px; border-bottom:1px solid #f0f0f0; font-size:12px; vertical-align:middle; }
+.ref-dir-table tr:last-child td { border-bottom:none; }
+.ref-dir-table tr:hover td { background:#fafafa; }
+.ref-inline-input {
+  border:1px solid #4EA72A; border-radius:4px; padding:3px 8px;
+  font-size:12px; width:100%;
+}
+.icon-btn {
+  background:none; border:none; cursor:pointer; padding:3px 6px;
+  border-radius:4px; font-size:14px; transition:background .15s;
+}
+.icon-btn:hover { background:#f0f0f0; }
+.icon-btn.danger:hover { background:#fde8e8; }
+.add-dir-row { background:#f8fdf5; }
+.add-dir-row td { padding:8px 10px; }
+.cur-flag { background:#1a3a6b; color:#fff; font-size:10px; font-weight:bold; padding:2px 8px; border-radius:10px; margin-left:8px; }
+
+/* ── INCOME ── */
+.income-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:20px; }
+.income-stat { background:#fff; border-radius:12px; padding:18px 20px; box-shadow:0 2px 8px rgba(0,0,0,.08); border-left:5px solid #4EA72A; }
+.income-stat.blue { border-color:#2471a3; }
+.income-stat.red { border-color:#c0392b; }
+.income-stat.profit { border-color:#8e44ad; }
+.income-stat .stat-label { font-size:11px; color:#888; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
+.income-stat .stat-value { font-size:26px; font-weight:900; }
+.income-stat .stat-sub { font-size:11px; color:#aaa; margin-top:4px; }
+.income-table { width:100%; border-collapse:collapse; font-size:13px; }
+.income-table thead th { background:#375623; color:#fff; padding:10px 12px; text-align:left; font-weight:600; position:sticky; top:0; }
+.income-table tbody tr:hover { background:#f0f9ea; }
+.income-table tbody td { padding:9px 12px; border-bottom:1px solid #f0f0f0; }
+.income-table .num { text-align:right; font-weight:600; }
+.income-table .del-btn { background:none; border:none; cursor:pointer; color:#e74c3c; font-size:16px; padding:2px 6px; border-radius:4px; }
+.income-table .del-btn:hover { background:#fee; }
+.cat-badge { display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:700; background:#e8f5e9; color:#2e7d32; }
+.profit-positive { color:#2e7d32; }
+.profit-negative { color:#c0392b; }
+.net-profit-card { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#fff; border-radius:12px; padding:20px 24px; box-shadow:0 4px 16px rgba(102,126,234,.35); margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
+.net-profit-card .npc-label { font-size:13px; opacity:.85; margin-bottom:4px; }
+.net-profit-card .npc-value { font-size:32px; font-weight:900; }
+.net-profit-card .npc-sub { font-size:12px; opacity:.75; margin-top:4px; }
+.net-profit-card .npc-icon { font-size:48px; opacity:.4; }
+
+/* ── ЛОГИН ── */
+#loginOverlay {
+  position:fixed; inset:0; z-index:99999;
+  background:linear-gradient(135deg,#1a3a0f 0%,#375623 60%,#4EA72A 100%);
+  display:flex; align-items:center; justify-content:center;
+}
+.login-box {
+  background:#fff; border-radius:16px; padding:40px 48px;
+  box-shadow:0 8px 40px rgba(0,0,0,.35); width:100%; max-width:380px;
+  text-align:center;
+}
+.login-box .login-logo { font-size:42px; margin-bottom:6px; }
+.login-box h2 { font-size:20px; font-weight:900; color:#1a3a0f; margin-bottom:4px; }
+.login-box p  { font-size:12px; color:#888; margin-bottom:24px; }
+.login-box input {
+  width:100%; padding:11px 14px; border:1.5px solid #ccc; border-radius:8px;
+  font-size:14px; margin-bottom:12px; box-sizing:border-box; outline:none;
+  transition:border .2s;
+}
+.login-box input:focus { border-color:#4EA72A; }
+.login-btn {
+  width:100%; padding:12px; background:linear-gradient(90deg,#375623,#4EA72A);
+  color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:bold;
+  cursor:pointer; transition:opacity .2s; margin-top:4px;
+}
+.login-btn:hover { opacity:.9; }
+.login-error {
+  color:#c0392b; font-size:12px; font-weight:bold;
+  margin-top:8px; display:none;
+}
+.login-hint {
+  margin-top:18px; font-size:11px; color:#bbb; border-top:1px solid #f0f0f0; padding-top:14px;
+}
+/* Режим «только просмотр» — скрываем элементы редактирования */
+body.view-mode .edit-only { display:none !important; }
+/* Бейдж режима в шапке */
+.role-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 12px; border-radius:20px; font-size:11px; font-weight:bold;
+}
+.role-badge.viewer { background:rgba(255,255,255,.15); color:#fff; }
+.role-badge.editor { background:rgba(255,255,255,.25); color:#fff; }
+</style>
+<style>
+#gsLoading { position:fixed; inset:0; background:rgba(255,255,255,.92); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:16px; color:#375623; }
+#gsLoading .spinner { width:40px; height:40px; border:4px solid #e0e0e0; border-top-color:#4EA72A; border-radius:50%; animation:spin .8s linear infinite; margin-bottom:14px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── TOAST УВЕДОМЛЕНИЯ ── */
+#toast-container { position:fixed; bottom:28px; right:28px; z-index:99999; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+.toast { display:flex; align-items:center; gap:10px; padding:13px 18px; border-radius:10px; font-size:13px; font-weight:600; color:#fff; box-shadow:0 4px 18px rgba(0,0,0,.22); pointer-events:auto; min-width:240px; max-width:380px; animation:toastIn .3s ease; }
+.toast.success { background:linear-gradient(135deg,#2e7d32,#4EA72A); }
+.toast.error   { background:linear-gradient(135deg,#c62828,#e53935); }
+.toast.info    { background:linear-gradient(135deg,#1565c0,#1976d2); }
+.toast.warning { background:linear-gradient(135deg,#e65100,#f57c00); }
+.toast .toast-icon { font-size:18px; flex-shrink:0; }
+.toast .toast-msg  { flex:1; line-height:1.4; }
+.toast .toast-close { cursor:pointer; opacity:.7; font-size:16px; padding:0 2px; }
+.toast .toast-close:hover { opacity:1; }
+.toast.hide { animation:toastOut .3s ease forwards; }
+@keyframes toastIn  { from { opacity:0; transform:translateX(60px); } to { opacity:1; transform:translateX(0); } }
+@keyframes toastOut { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(60px); } }
+</style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div id="gsLoading"><div class="spinner"></div><div>Загрузка данных из Google Sheets...</div></div>
+
+<!-- ═══ ЭКРАН ВХОДА ══════════════════════════════════════════════════ -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">📊</div>
+    <h2>Бюджет расходов 2026 — Компания 2</h2>
+    <p>Введите пароль для входа</p>
+    <input type="password" id="loginPass" placeholder="Пароль"
+      onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="login-btn" onclick="doLogin()">Войти</button>
+    <div class="login-error" id="loginError">❌ Неверный пароль</div>
+    <div class="login-hint">
+      Два уровня доступа:<br>
+      👁 Просмотр — только чтение<br>
+      ✏️ Редактирование — полный доступ
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HEADER ═══════════════════════════════════════════════════════ -->
+<div class="page-header">
+  <div>
+    <div class="logo">📊 Бюджет расходов 2026 — Компания 2</div>
+    <div class="subtitle">Валюта: Кыргызский сом (KGS) · Учёт · Контроль · Анализ</div>
+  </div>
+  <div class="hdr-btns">
+    <select id="yearSelect" onchange="switchYear(this.value)" style="background:#375623;color:#fff;border:1px solid #4EA72A;border-radius:5px;padding:5px 10px;font-weight:bold;cursor:pointer;font-size:13px;">
+    </select>
+    <span id="yearBadge" style="background:#4EA72A;color:#fff;padding:5px 12px;border-radius:5px;font-weight:bold;font-size:13px;">2026</span>
+    <button class="btn btn-gray btn-sm" onclick="reloadData()" title="Обновить данные из Google Sheets">🔄 Обновить</button>
+    <span id="roleBadge" class="role-badge"></span>
+    <button class="btn btn-blue" onclick="exportCSV()">⬇ CSV</button>
+    <button class="btn btn-blue" onclick="exportData()" title="Скачать все данные как файл резервной копии">💾 Экспорт</button>
+    <button class="btn btn-gray edit-only" onclick="document.getElementById('importFile').click()" title="Загрузить данные из файла резервной копии">📂 Импорт</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="btn" onclick="shareData()" title="Создать ссылку с данными для открытия на другом устройстве">🔗 Поделиться</button>
+    <button class="btn" onclick="window.print()">🖨 Печать</button>
+    <button class="btn btn-gray" onclick="doLogout()">🚪 Выйти</button>
+  </div>
+</div>
+
+<!-- ═══ TABS ══════════════════════════════════════════════════════════ -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('budget',this)">📊 Бюджет</button>
+  <button class="tab-btn"        onclick="switchTab('svod',this)">📋 Сводка</button>
+  <button class="tab-btn"        onclick="switchTab('ref',this)">📂 Справочник</button>
+  <button class="tab-btn" onclick="switchTab('income',this)">💰 Доходы</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     ТАБ 1: БЮДЖЕТ
+     ════════════════════════════════════════════════════════════════ -->
+<div id="tab-budget" class="tab-content active">
+
+  <div class="toolbar">
+    <label>Квартал:</label>
+    <select id="selQuarter" onchange="render()">
+      <option value="Q2">II квартал (Апр–Июн)</option>
+      <option value="Q1">I квартал (Янв–Мар)</option>
+      <option value="Q3">III квартал (Июл–Сен)</option>
+      <option value="Q4">IV квартал (Окт–Дек)</option>
+    </select>
+    <label>Блок:</label>
+    <select id="selBlock" onchange="render()">
+      <option value="">Все блоки</option>
+      <option>Коммунальные услуги</option>
+      <option>Транспорт</option>
+      <option>Развлечения</option>
+      <option>Операционные расходы</option>
+    </select>
+    <input id="search" type="text" placeholder="🔍 Поиск направления..." oninput="render()" style="min-width:200px;">
+  </div>
+
+  <div class="container">
+
+    <!-- CARDS -->
+    <div class="cards-grid" id="cards"></div>
+
+    <!-- CHARTS -->
+    <div class="charts-row">
+      <div class="chart-box">
+        <h3>📊 Бюджет vs Факт по блокам</h3>
+        <canvas id="barChart"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>🥧 Структура расходов</h3>
+        <canvas id="pieChart"></canvas>
+      </div>
+    </div>
+
+    <!-- ADD FORM -->
+    <div class="section edit-only">
+      <div class="section-head">➕ Добавить расход</div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Блок</label>
+            <select id="fBlock" onchange="updateDirs()">
+              <option>Коммунальные услуги</option>
+              <option>Транспорт</option>
+              <option>Развлечения</option>
+              <option>Операционные расходы</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Направление <span style="color:#aaa;font-weight:normal;">(выбери или напиши)</span></label>
+            <input type="text" id="fDir" list="dirList" placeholder="Введите или выберите..." autocomplete="off" style="min-width:200px;">
+            <datalist id="dirList"></datalist>
+          </div>
+          <div class="form-group">
+            <label>Квартал</label>
+            <select id="fQuarter" onchange="updateMonths()">
+              <option value="Q1">I квартал</option>
+              <option value="Q2" selected>II квартал</option>
+              <option value="Q3">III квартал</option>
+              <option value="Q4">IV квартал</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Месяц</label>
+            <select id="fMonth">
+              <option value="m1">Апрель</option>
+              <option value="m2">Май</option>
+              <option value="m3">Июнь</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Дата</label>
+            <input type="date" id="fDate" onchange="previewRate()">
+          </div>
+          <div class="form-group">
+            <label>Описание</label>
+            <input type="text" id="fDesc" placeholder="Необязательно" style="min-width:200px;">
+          </div>
+          <div class="form-group">
+            <label>Сумма (сом)</label>
+            <input type="number" id="fAmount" placeholder="0" min="0" oninput="previewRate()">
+          </div>
+          <div class="form-group">
+            <label>≈ Сумма ($)</label>
+            <div id="usdPreview" style="
+              min-width:120px; padding:5px 8px; border:1px solid #e0e0e0;
+              border-radius:4px; background:#f0fdf4; font-size:12px;
+              font-weight:bold; color:#166534; line-height:1.6;">
+              —
+            </div>
+            <div id="rateHint" style="font-size:10px;color:#aaa;margin-top:2px;"></div>
+          </div>
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <button class="btn" onclick="addEntry()">✔ Добавить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN TABLE -->
+    <div class="section">
+      <div class="section-head">
+        <span>Бюджет расходов по блокам
+          <span style="font-size:10px;font-weight:normal;opacity:.75;margin-left:6px;">
+            ✏ кликни на сумму бюджета чтобы изменить
+          </span>
+        </span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span id="tableSubtitle" style="font-size:11px;opacity:.75;"></span>
+          <button class="btn btn-gray btn-sm" onclick="resetBudgets()" title="Сбросить бюджеты к исходным">↺ Сброс</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="bt" id="mainTable"></table>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /tab-budget -->
+
+
+<!-- ════════════════════════════════════════════════════════════════════
+     ТАБ 2: СВОДКА
+     ════════════════════════════════════════════════════════════════ -->
+<div id="tab-svod" class="tab-content">
+
+  <!-- Фильтры сводки -->
+  <div class="sv-filters">
+    <label>Квартал:</label>
+    <select id="svQuarter" onchange="renderSvod()">
+      <option value="">Все кварталы</option>
+      <option value="Q1">I квартал</option>
+      <option value="Q2">II квартал</option>
+      <option value="Q3">III квартал</option>
+      <option value="Q4">IV квартал</option>
+    </select>
+    <label>Блок:</label>
+    <select id="svBlock" onchange="renderSvod()">
+      <option value="">Все блоки</option>
+      <option>Коммунальные услуги</option>
+      <option>Транспорт</option>
+      <option>Развлечения</option>
+      <option>Операционные расходы</option>
+    </select>
+    <label>Направление:</label>
+    <select id="svDir" onchange="renderSvod()">
+      <option value="">Все направления</option>
+    </select>
+    <label>Поиск:</label>
+    <input type="text" id="svSearch" placeholder="🔍 Описание..." oninput="renderSvod()" style="min-width:180px;">
+    <button class="btn btn-gray btn-sm" onclick="clearSvFilters()">✕ Сбросить фильтры</button>
+    <button class="btn btn-blue btn-sm" onclick="restoreBase()" title="Вернуть скрытые базовые строки">↺ Восстановить удалённые</button>
+    <span id="svCount" class="badge-count">0</span>
+  </div>
+
+  <div class="container">
+    <div class="section">
+      <div class="section-head">
+        <span>📋 Сводная таблица расходов</span>
+        <span id="svTotal" style="font-size:11px;opacity:.8;"></span>
+      </div>
+      <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
+        <table class="sv" id="svodTable">
+          <thead>
+            <tr id="svHead"></tr>
+          </thead>
+          <tbody id="svBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /tab-svod -->
+
+<!-- ════════════════════════════════════════════════════════════════════
+     ТАБ 3: СПРАВОЧНИК
+     ════════════════════════════════════════════════════════════════ -->
+<div id="tab-ref" class="tab-content">
+  <div class="container">
+
+    <!-- Добавить блок -->
+    <div class="section" style="margin-bottom:16px;">
+      <div class="section-head">
+        <span>➕ Добавить новый блок</span>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Название блока</label>
+            <input type="text" id="refNewBlock" placeholder="Например: Здоровье" style="min-width:220px;">
+          </div>
+          <div class="form-group">
+            <label>Цвет</label>
+            <input type="color" id="refNewColor" value="#4EA72A" style="width:50px;height:32px;padding:2px;border:1px solid #ccc;border-radius:4px;cursor:pointer;">
+          </div>
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <button class="btn" onclick="addBlock()">✔ Добавить блок</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Список блоков -->
+    <div id="refBlocks"></div>
+
+  </div>
+</div><!-- /tab-ref -->
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     ТАБ 4: ДОХОДЫ
+     ═══════════════════════════════════════════════════════════════════ -->
+<div id="tab-income" class="tab-content">
+
+  <!-- Фильтр доходов -->
+  <div class="sv-filters" id="incomeFilters">
+    <label>Квартал:</label>
+    <select id="incomeQFilter" onchange="renderIncome()">
+      <option value="">Все кварталы</option>
+      <option value="Q1">I квартал (Янв–Мар)</option>
+      <option value="Q2">II квартал (Апр–Июн)</option>
+      <option value="Q3">III квартал (Июл–Сен)</option>
+      <option value="Q4">IV квартал (Окт–Дек)</option>
+    </select>
+    <label>Категория:</label>
+    <select id="incomeCatFilter" onchange="renderIncome()">
+      <option value="">Все категории</option>
+      <option>Продажи / Выручка</option>
+      <option>Услуги</option>
+      <option>Аренда</option>
+      <option>Инвестиции</option>
+      <option>Субсидии / Гранты</option>
+      <option>Прочее</option>
+    </select>
+    <button class="btn btn-gray btn-sm" onclick="clearIncomeFilters()">✕ Сбросить</button>
+    <span id="incomeFilterCount" class="badge-count">0</span>
+  </div>
+
+  <div class="container">
+
+    <!-- Summary cards -->
+    <div class="income-stats" id="incomeStats"></div>
+
+    <!-- Net Profit Banner -->
+    <div class="net-profit-card" id="netProfitBanner">
+      <div>
+        <div class="npc-label">💹 Чистая прибыль (Доходы − Расходы)</div>
+        <div class="npc-value" id="netProfitValue">0 сом</div>
+        <div class="npc-sub" id="netProfitSub">Загрузка данных...</div>
+      </div>
+      <div class="npc-icon" id="netProfitIcon">📈</div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="charts-row" style="margin-bottom:16px;">
+      <div class="chart-box">
+        <h3>🥧 Доходы по категориям</h3>
+        <canvas id="incomePieChart" style="max-height:220px;"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>📊 Доходы vs Расходы по месяцам</h3>
+        <canvas id="incomeBarChart" style="max-height:220px;"></canvas>
+      </div>
+    </div>
+
+    <!-- Add income form -->
+    <div class="section edit-only" style="margin-bottom:16px;">
+      <div class="section-head">💰 Добавить доход</div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Категория</label>
+            <select id="iCategory">
+              <option>Продажи / Выручка</option>
+              <option>Услуги</option>
+              <option>Аренда</option>
+              <option>Инвестиции</option>
+              <option>Субсидии / Гранты</option>
+              <option>Прочее</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Дата</label>
+            <input type="date" id="iDate">
+          </div>
+          <div class="form-group">
+            <label>Сумма (сом)</label>
+            <input type="number" id="iAmount" placeholder="0" min="0" step="100"
+              oninput="previewIncomeRate()">
+          </div>
+          <div class="form-group">
+            <label>Описание</label>
+            <input type="text" id="iDesc" placeholder="Краткое описание..." style="min-width:220px;">
+          </div>
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <button class="btn" style="background:linear-gradient(135deg,#667eea,#764ba2);" onclick="addIncome()">✔ Добавить доход</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#888;margin-top:4px;">
+          💱 USD: <span id="iUsdPreview">—</span> &nbsp;|&nbsp; Курс: <span id="iRateHint">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Income table -->
+    <div class="section">
+      <div class="section-head">
+        <span>📋 Все доходы</span>
+        <span id="incomeCount" style="font-size:11px;opacity:.8;"></span>
+      </div>
+      <div style="overflow-x:auto; max-height:520px; overflow-y:auto;">
+        <table class="income-table" id="incomeTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Дата</th>
+              <th>Категория</th>
+              <th>Описание</th>
+              <th style="text-align:right">Сумма (сом)</th>
+              <th style="text-align:right">USD</th>
+              <th style="text-align:center">Доля</th>
+              <th class="edit-only"></th>
+            </tr>
+          </thead>
+          <tbody id="incomeBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /tab-income -->
+
+<footer>Бюджет расходов · Данные из Google Sheets · При добавлении нового года — добавь лист в таблицу и год в AVAILABLE_YEARS</footer>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+//  TOAST УВЕДОМЛЕНИЯ
+// ════════════════════════════════════════════════════════════════════
+function showToast(msg, type='success', duration=3500){
+  const icons = { success:'✅', error:'❌', info:'ℹ️', warning:'⚠️' };
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ️'}</span><span class="toast-msg">${msg}</span><span class="toast-close" onclick="this.parentElement.remove()">✕</span>`;
+  container.appendChild(el);
+  setTimeout(()=>{ el.classList.add('hide'); setTimeout(()=>el.remove(), 300); }, duration);
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  ПАРОЛИ ДОСТУПА  ← меняйте здесь
+// ════════════════════════════════════════════════════════════════════
+const PASSWORDS = {
+  viewer: "просмотр123",   // пароль для режима «только чтение»
+  editor: "редактор456",   // пароль для режима «полный доступ»
+};
+
+// ── Авторизация ──────────────────────────────────────────────────────
+let currentRole = null; // 'viewer' | 'editor'
+
+function doLogin(){
+  const pass = document.getElementById("loginPass").value.trim();
+  const err  = document.getElementById("loginError");
+  if(pass === PASSWORDS.editor){
+    currentRole = "editor";
+  } else if(pass === PASSWORDS.viewer){
+    currentRole = "viewer";
+  } else {
+    err.style.display = "block";
+    document.getElementById("loginPass").value = "";
+    return;
+  }
+  err.style.display = "none";
+  sessionStorage.setItem("budget_role_2026", currentRole);
+  applyRole(currentRole);
+  document.getElementById("loginOverlay").style.display = "none";
+}
+
+function doLogout(){
+  if(!confirm("Выйти из системы?")) return;
+  sessionStorage.removeItem("budget_role_2026");
+  currentRole = null;
+  document.getElementById("loginPass").value = "";
+  document.getElementById("loginOverlay").style.display = "flex";
+}
+
+function applyRole(role){
+  currentRole = role;
+  const body = document.body;
+  const badge = document.getElementById("roleBadge");
+  if(role === "editor"){
+    body.classList.remove("view-mode");
+    badge.className = "role-badge editor";
+    badge.textContent = "✏️ Редактирование";
+  } else {
+    body.classList.add("view-mode");
+    badge.className = "role-badge viewer";
+    badge.textContent = "👁 Просмотр";
+  }
+}
+
+function checkSession(){
+  const saved = sessionStorage.getItem("budget_role_2026");
+  if(saved === "editor" || saved === "viewer"){
+    applyRole(saved);
+    document.getElementById("loginOverlay").style.display = "none";
+    return true;
+  }
+  return false;
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  GOOGLE SHEETS CONFIG
+// ════════════════════════════════════════════════════════════════════
+const SPREADSHEET_ID = "1izDinymSmR6IPWqSaXsu_WJEhfy0gvG-Eo3EAmVjxeQ";
+const SCRIPT_URL     = "https://script.google.com/macros/s/AKfycbwNbMmTzYvQT6gLP2zQlVeQoR50TaHxK5MKvIXp4YEctfExAmlIAcSmDr2Y3YmAxQoZ3g/exec";
+const AVAILABLE_YEARS = [2026, 2027];
+let currentYear = 2026;
+
+function gsURL(sheetName){
+  return `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+}
+
+// ── POST to Google Apps Script (no-cors, fire-and-forget) ──────────────
+function postToSheets(params){
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    mode:   "no-cors",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body:   new URLSearchParams(params).toString()
+  }).catch(e => console.warn("Sheets POST error:", e));
+}
+
+const MONTH_KEYS = {
+  "Январь":"m1","Февраль":"m2","Март":"m3","Апрель":"m4","Май":"m5","Июнь":"m6",
+  "Июль":"m7","Август":"m8","Сентябрь":"m9","Октябрь":"m10","Ноябрь":"m11","Декабрь":"m12"
+};
+
+// Разбирает одну строку CSV с учётом кавычек (поля могут содержать запятые)
+function splitCSVLine(line){
+  const result = [];
+  let cur = "", inQ = false;
+  for(let i=0; i<line.length; i++){
+    const ch = line[i];
+    if(ch==='"'){ if(inQ && line[i+1]==='"'){ cur+='"'; i++; } else inQ=!inQ; }
+    else if(ch===',' && !inQ){ result.push(cur); cur=""; }
+    else cur+=ch;
+  }
+  result.push(cur);
+  return result.map(c=>c.trim());
+}
+
+// Парсит число: заменяет запятую-разделитель на точку (формат gviz)
+function parseNum(s){ return parseFloat(String(s||0).replace(",","."))||0; }
+
+// parseCSV с заголовками (для Справочник, листа года)
+function parseCSV(text){
+  const lines = text.trim().split("\n");
+  const headers = splitCSVLine(lines[0]);
+  const data = [];
+  for(let i=1;i<lines.length;i++){
+    const row = splitCSVLine(lines[i]);
+    if(!row[0] && !row[1]) continue;
+    const obj = {};
+    headers.forEach((h,j)=>{ obj[h]=row[j]||""; });
+    data.push(obj);
+  }
+  return data;
+}
+
+// parseCSV по позиции (для листов без заголовков: Расходы, Доходы)
+function parseCSVPositional(text, cols){
+  const lines = text.trim().split("\n");
+  if(!lines.length) return [];
+  const data = [];
+  let startIdx = 0;
+  // Если первая ячейка — не 13-значный timestamp → это заголовок, пропускаем
+  const firstCell = splitCSVLine(lines[0])[0] || "";
+  if(!/^\d{10,}$/.test(firstCell)) startIdx = 1;
+  for(let i=startIdx; i<lines.length; i++){
+    const row = splitCSVLine(lines[i]);
+    if(!row[0] && !row[1]) continue;
+    const obj = {};
+    cols.forEach((col,j)=>{ obj[col]=row[j]||""; });
+    data.push(obj);
+  }
+  return data;
+}
+
+function buildFromSheets(refRows, dataRows){
+  // Build block structure from Справочник
+  const blockColors = {};
+  const blockDirs = {};
+  const blockOrder = [];
+  refRows.forEach(row=>{
+    const block = row["Блок"]||"";
+    const dir   = row["Направление"]||"";
+    const color = row["Цвет"]||"#4EA72A";
+    if(!block) return;
+    if(!blockColors[block]){ blockColors[block]=color; blockOrder.push(block); blockDirs[block]=[]; }
+    if(dir) blockDirs[block].push(dir);
+  });
+
+  // Build data lookup from year sheet
+  const dataMap = {};
+  dataRows.forEach(row=>{
+    const key = `${row["Блок"]}::${row["Направление"]}`;
+    const d = { budget: parseNum(row["Бюджет"]) };
+    Object.entries(MONTH_KEYS).forEach(([label,mkey])=>{ d[mkey]=parseNum(row[label]); });
+    dataMap[key] = d;
+  });
+
+  // Merge
+  return blockOrder.map((block,i)=>({
+    block,
+    color: blockColors[block],
+    dirs: blockDirs[block].map(name=>{
+      const d = dataMap[`${block}::${name}`] || {};
+      return {
+        name,
+        budget: d.budget||0,
+        m1:d.m1||0,m2:d.m2||0,m3:d.m3||0,m4:d.m4||0,m5:d.m5||0,m6:d.m6||0,
+        m7:d.m7||0,m8:d.m8||0,m9:d.m9||0,m10:d.m10||0,m11:d.m11||0,m12:d.m12||0
+      };
+    })
+  }));
+}
+
+async function loadFromGoogleSheets(year){
+  year = year || currentYear;
+  document.getElementById("gsLoading").style.display = "flex";
+  try {
+    const [refResp, dataResp, расходыResp, доходыResp] = await Promise.all([
+      fetch(gsURL("Справочник")),
+      fetch(gsURL(String(year))),
+      fetch(gsURL("Расходы")),
+      fetch(gsURL("Доходы"))
+    ]);
+    if(!refResp.ok || !dataResp.ok) throw new Error("Ошибка загрузки");
+    const [refText, dataText] = await Promise.all([refResp.text(), dataResp.text()]);
+    const refRows  = parseCSV(refText);
+    const dataRows = parseCSV(dataText);
+    if(!refRows.length) throw new Error("Справочник пуст");
+
+    const merged = buildFromSheets(refRows, dataRows);
+    INITIAL_DATA.length = 0;
+    merged.forEach(b=>INITIAL_DATA.push(b));
+    refBlocks = merged.map(b=>({
+      block: b.block,
+      color: b.color || "#4EA72A",
+      dirs: b.dirs.map(d=>({...d}))
+    }));
+    // Кэшируем свежие данные Справочника из Google Sheets в localStorage
+    localStorage.setItem("ref_blocks_2026", JSON.stringify(refBlocks));
+    // Инициализируем квартальные бюджеты из Google Sheets (годовой бюджет = дефолт для всех кварталов)
+    // Только если для квартала ещё не задан явный бюджет пользователем
+    refBlocks.forEach(b => b.dirs.forEach(d => {
+      ["Q1","Q2","Q3","Q4"].forEach(q => {
+        const qKey = `${year}::${q}::${b.block}::${d.name}`;
+        if(!(qKey in quarterlyBudgets)) {
+          quarterlyBudgets[qKey] = d.budget;
+        }
+      });
+    }));
+    saveCustomBudgets();
+    currentYear = year;
+    document.getElementById("yearBadge").textContent = year;
+    console.log(`✅ Данные загружены: ${year}, ${merged.length} блоков`);
+
+    // ── Расходы: позиционный парсинг (нет строки заголовков) ──────────
+    // Колонки в листе Расходы: id, date, block, dir, quarter, month, monthName, amount, amountUsd, usdRate, rateDate, desc
+    const РАСХ_COLS = ['id','date','block','dir','quarter','month','monthName','amount','amountUsd','usdRate','rateDate','desc'];
+    if(расходыResp.ok){
+      try{
+        const расходыText = await расходыResp.text();
+        const расходыRows = parseCSVPositional(расходыText, РАСХ_COLS);
+        if(расходыRows.length){
+          const sheetExtras = расходыRows
+            .filter(r => r.block)
+            .map(r => ({
+              id:        r.id || "",
+              date:      r.date || "",
+              block:     r.block || "",
+              dir:       r.dir || "",
+              quarter:   r.quarter || "Q1",
+              month:     r.month || "m1",
+              monthName: r.monthName || "",
+              amount:    parseNum(r.amount),
+              amountUsd: r.amountUsd ? parseNum(r.amountUsd) : null,
+              usdRate:   r.usdRate   ? parseNum(r.usdRate)   : null,
+              rateDate:  r.rateDate  || "",
+              desc:      r.desc      || ""
+            }));
+          // Merge: Google Sheets = источник правды + сохраняем локальные записи ещё не синхронизированные
+          const sheetIds = new Set(sheetExtras.filter(e=>e.id).map(e=>e.id));
+          const localOnly = extras.filter(e => e.id && !sheetIds.has(e.id));
+          extras = [...sheetExtras, ...localOnly];
+          saveExtras();
+          console.log(`✅ Расходы загружены из Sheets: ${sheetExtras.length} записей (+${localOnly.length} локальных)`);
+        }
+      } catch(re){ console.warn("⚠ Ошибка загрузки расходов:", re.message); }
+    }
+
+    // ── Доходы: позиционный парсинг (нет строки заголовков) ──────────
+    // Колонки в листе Доходы: id, date, category, desc, amount, amountUsd, usdRate, rateDate
+    const ДОХ_COLS = ['id','date','category','desc','amount','amountUsd','usdRate','rateDate'];
+    if(доходыResp.ok){
+      try{
+        const txt = await доходыResp.text();
+        const rows = parseCSVPositional(txt, ДОХ_COLS);
+        if(rows.length){
+          const sheetIncomes = rows.filter(r=>r.date||r.category).map(r=>({
+            id: r.id||"",
+            date: r.date||"",
+            category: r.category||"Прочее",
+            desc: r.desc||"",
+            amount: parseNum(r.amount),
+            amountUsd: r.amountUsd ? parseNum(r.amountUsd) : null,
+            usdRate: r.usdRate ? parseNum(r.usdRate) : null,
+            rateDate: r.rateDate||""
+          }));
+          // Merge по ID
+          const sheetIncIds = new Set(sheetIncomes.filter(e=>e.id).map(e=>e.id));
+          const localOnlyInc = incomes.filter(e => e.id && !sheetIncIds.has(e.id));
+          incomes = [...sheetIncomes, ...localOnlyInc];
+          saveIncomes();
+          console.log(`✅ Доходы загружены из Sheets: ${sheetIncomes.length} записей (+${localOnlyInc.length} локальных)`);
+        }
+      } catch(re){ console.warn("⚠ Ошибка загрузки доходов:", re.message); }
+    }
+  } catch(e){
+    console.warn("⚠ Не удалось загрузить Google Sheets:", e.message);
+    // fallback: keep existing data
+  } finally {
+    document.getElementById("gsLoading").style.display = "none";
+  }
+}
+
+async function switchYear(year){
+  year = parseInt(year);
+  if(year === currentYear) return;
+  extras = [];
+  hiddenBase.clear();
+  // НЕ сбрасываем customBudgets — они обновятся из Google Sheets после загрузки
+  await loadFromGoogleSheets(year);
+  syncAll();
+  renderRef();
+}
+
+async function reloadData(){
+  showToast("Обновляю данные из Google Sheets...", "info", 2000);
+  await loadFromGoogleSheets(currentYear);
+  syncAll();
+  renderRef();
+  showToast("Данные обновлены из Google Sheets ✓", "success");
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  ДАННЫЕ
+// ════════════════════════════════════════════════════════════════════
+const QUARTERS = {
+  Q1:{ labels:["Январь","Февраль","Март"],         keys:["m1","m2","m3"]   },
+  Q2:{ labels:["Апрель","Май","Июнь"],             keys:["m4","m5","m6"]   },
+  Q3:{ labels:["Июль","Август","Сентябрь"],        keys:["m7","m8","m9"]   },
+  Q4:{ labels:["Октябрь","Ноябрь","Декабрь"],     keys:["m10","m11","m12"] },
+};
+const Q_LABELS = { Q1:"I квартал", Q2:"II квартал", Q3:"III квартал", Q4:"IV квартал" };
+const MONTH_TO_Q = {};
+Object.entries(QUARTERS).forEach(([q,v])=> v.labels.forEach(m=> MONTH_TO_Q[m]=q));
+
+const DEFAULT_COLORS = ["#4EA72A","#2471a3","#e67e22","#8e44ad","#c0392b","#16a085","#8e44ad","#d35400"];
+
+// Загружаем справочник блоков из localStorage (или исходные данные)
+function loadRefBlocks(){
+  const saved = localStorage.getItem("ref_blocks_2026");
+  if(saved) return JSON.parse(saved);
+  // Первый запуск — берём из INITIAL_DATA
+  return INITIAL_DATA.map((b,i)=>({
+    block: b.block,
+    color: DEFAULT_COLORS[i] || "#4EA72A",
+    dirs:  b.dirs.map(d=>({name:d.name, budget:d.budget, m1:d.m1||0, m2:d.m2||0, m3:d.m3||0, m4:d.m4||0, m5:d.m5||0, m6:d.m6||0, m7:d.m7||0, m8:d.m8||0, m9:d.m9||0, m10:d.m10||0, m11:d.m11||0, m12:d.m12||0}))
+  }));
+}
+function saveRefBlocks(){
+  localStorage.setItem("ref_blocks_2026", JSON.stringify(refBlocks));
+  postToSheets({ action: "updateRef", data: JSON.stringify(refBlocks) });
+}
+
+function getBlockColor(blockName){
+  return refBlocks.find(b=>b.block===blockName)?.color || "#4EA72A";
+}
+function getBlockIdx(blockName){
+  return refBlocks.findIndex(b=>b.block===blockName);
+}
+
+// Динамические BLOCK_COLORS и BLOCK_IDX (для обратной совместимости)
+const BLOCK_COLORS = ["#4EA72A","#2471a3","#e67e22","#8e44ad"];
+const BLOCK_IDX    = {"Коммунальные услуги":0,"Транспорт":1,"Развлечения":2,"Операционные расходы":3};
+
+const INITIAL_DATA = [
+  { block:"Коммунальные услуги", dirs:[
+    { name:"Электричество",         budget:450000, m1:120000, m2:150000, m3:155000 },
+    { name:"Вода и водоотведение",   budget:180000, m1:45000,  m2:60000,  m3:62000  },
+    { name:"Интернет / Телефония",   budget:240000, m1:75000,  m2:75000,  m3:75000  },
+    { name:"Газ / Отопление",        budget:330000, m1:110000, m2:110000, m3:110000 },
+  ]},
+  { block:"Транспорт", dirs:[
+    { name:"Автобус / Метро",         budget:120000, m1:30000,  m2:40000,  m3:42000  },
+    { name:"Такси (Yandex, InDrive)", budget:300000, m1:85000,  m2:100000, m3:95000  },
+    { name:"Бензин",                  budget:480000, m1:150000, m2:160000, m3:155000 },
+    { name:"Парковка / Техобслуж.",   budget:150000, m1:40000,  m2:50000,  m3:48000  },
+  ]},
+  { block:"Развлечения", dirs:[
+    { name:"Кино / Стриминг",   budget:120000, m1:30000,  m2:40000,  m3:39000  },
+    { name:"Рестораны / Кафе",  budget:360000, m1:95000,  m2:120000, m3:118000 },
+    { name:"Спорт / Фитнес",    budget:240000, m1:70000,  m2:80000,  m3:79000  },
+    { name:"Прочие развлечения",budget:180000, m1:45000,  m2:60000,  m3:58000  },
+  ]},
+  { block:"Операционные расходы", dirs:[
+    { name:"Аренда офиса / склада",   budget:1800000,m1:580000, m2:600000, m3:598000 },
+    { name:"Канцелярия / расходники", budget:300000, m1:85000,  m2:100000, m3:97000  },
+    { name:"ФОТ (зарплата + премии)", budget:4500000,m1:1450000,m2:1500000,m3:1489000},
+    { name:"Маркетинг / реклама",     budget:600000, m1:190000, m2:200000, m3:193000 },
+    { name:"Прочие операционные",     budget:450000, m1:130000, m2:150000, m3:148000 },
+  ]},
+];
+
+let refBlocks = loadRefBlocks(); // ← после INITIAL_DATA, теперь порядок правильный
+
+let extras = JSON.parse(localStorage.getItem("budget_extras_2026")||"[]");
+function saveExtras(){ localStorage.setItem("budget_extras_2026",JSON.stringify(extras)); }
+
+// ── ДОХОДЫ ──────────────────────────────────────────────────────────
+let incomes = JSON.parse(localStorage.getItem("budget_incomes_2026")||"[]");
+function saveIncomes(){ localStorage.setItem("budget_incomes_2026", JSON.stringify(incomes)); }
+
+const INCOME_CATEGORIES = [
+  "Продажи / Выручка","Услуги","Аренда","Инвестиции","Субсидии / Гранты","Прочее"
+];
+const INCOME_CAT_COLORS = {
+  "Продажи / Выручка":"#2e7d32",
+  "Услуги":"#1565c0",
+  "Аренда":"#e65100",
+  "Инвестиции":"#6a1b9a",
+  "Субсидии / Гранты":"#00695c",
+  "Прочее":"#546e7a"
+};
+
+// Скрытые базовые строки: Set ключей "Блок::Направление::m1"
+let hiddenBase = new Set(JSON.parse(localStorage.getItem("hidden_base_2026")||"[]"));
+function saveHiddenBase(){ localStorage.setItem("hidden_base_2026",JSON.stringify([...hiddenBase])); }
+function hideBaseRow(key){ hiddenBase.add(key); saveHiddenBase(); syncAll(); }
+function restoreBase(){ hiddenBase.clear(); saveHiddenBase(); syncAll(); }
+
+// Бюджеты по кварталам и годам: ключ = "год::квартал::Блок::Направление"
+// Пример: "2026::Q2::Коммунальные услуги::Электричество" = 450000
+let quarterlyBudgets = JSON.parse(localStorage.getItem("quarterly_budgets")||"{}");
+// Сбрасываем старый формат (budget_custom_2026) — у него не было кварталов
+if(localStorage.getItem("budget_custom_2026")){ localStorage.removeItem("budget_custom_2026"); }
+function saveCustomBudgets(){ localStorage.setItem("quarterly_budgets",JSON.stringify(quarterlyBudgets)); }
+
+function _currentQ(){ return document.getElementById("selQuarter")?.value || "Q1"; }
+
+function getBudget(block, name){
+  const key = `${currentYear}::${_currentQ()}::${block}::${name}`;
+  if(key in quarterlyBudgets) return quarterlyBudgets[key];
+  // Фоллбэк: refBlocks (годовой бюджет из Google Sheets)
+  return refBlocks.find(b=>b.block===block)?.dirs.find(d=>d.name===name)?.budget ?? 0;
+}
+function setBudget(block, name, val){
+  const q = _currentQ();
+  const key = `${currentYear}::${q}::${block}::${name}`;
+  quarterlyBudgets[key] = val;
+  saveCustomBudgets();
+}
+
+function editBudgetCell(el, block, name){
+  if(currentRole !== "editor"){ return; }
+  const cur = getBudget(block, name);
+  el.innerHTML=`<input type="number" value="${cur}" min="0"
+    style="width:110px;padding:3px 6px;border:2px solid #4EA72A;border-radius:4px;font-size:12px;font-weight:bold;color:#00008B;"
+    onblur="saveBudgetCell(this,'${block}','${name}')"
+    onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){render();}"
+    onclick="event.stopPropagation()">`;
+  el.querySelector("input").focus();
+  el.querySelector("input").select();
+}
+
+function saveBudgetCell(inp, block, name){
+  const val = parseFloat(inp.value);
+  if(!isNaN(val) && val>=0){
+    const q = _currentQ();
+    setBudget(block, name, val);
+    postToSheets({ action: "updateBudget", block, dir: name, value: val, year: currentYear, quarter: q });
+  }
+  syncAll();
+}
+
+// ── Кэш курсов KGS→USD (дата → курс) ───────────────────────────────
+const rateCache = {};
+
+async function fetchRate(date){
+  const cacheKey = date || "latest";
+  if(rateCache[cacheKey]) return rateCache[cacheKey];
+  try{
+    // API с историческими курсами, поддерживает KGS
+    const tag = date || "latest";
+    const urls = [
+      `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@${tag}/v1/currencies/kgs.json`,
+      `https://latest.currency-api.pages.dev/v1/currencies/kgs.json`,
+    ];
+    let j = null;
+    for(const url of urls){
+      try{
+        const r = await fetch(url);
+        if(r.ok){ j = await r.json(); break; }
+      }catch(e){}
+    }
+    if(!j || !j.kgs?.usd) return null;
+    const result = { rate: j.kgs.usd, actualDate: j.date };
+    rateCache[cacheKey] = result;
+    return result;
+  } catch(e){ return null; }
+}
+
+async function previewRate(){
+  const amount = parseFloat(document.getElementById("fAmount").value);
+  const date   = document.getElementById("fDate").value;
+  const preview= document.getElementById("usdPreview");
+  const hint   = document.getElementById("rateHint");
+  if(!amount || amount<=0){ preview.textContent="—"; hint.textContent=""; return; }
+  preview.textContent="⏳ загрузка...";
+  const res = await fetchRate(date);
+  if(!res){ preview.textContent="—"; hint.textContent="⚠ нет данных о курсе"; return; }
+  const usd = (amount * res.rate).toFixed(2);
+  preview.textContent=`$ ${parseFloat(usd).toLocaleString("ru-RU")}`;
+  hint.textContent=`Курс на ${res.actualDate}: 1 $ = ${Math.round(1/res.rate).toLocaleString("ru-RU")} сом`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════════════════════════════
+const fmtN = n => (+n||0).toLocaleString("ru-RU");
+const pct  = (a,b) => b===0?0:Math.round(a/b*10000)/100;
+
+function getVal(dir,key){
+  // Базовое значение — 0 если строка скрыта в Сводке
+  const baseKey = `${dir._block}::${dir.name}::${key}`;
+  let v = hiddenBase.has(baseKey) ? 0 : (dir[key]||0);
+  const yearStr = String(currentYear);
+  // Только расходы выбранного года
+  extras.forEach(e=>{
+    if(e.block===dir._block && e.dir===dir.name && e.month===key &&
+       (!e.date || e.date.startsWith(yearStr))) v+=e.amount;
+  });
+  return v;
+}
+function buildData(){
+  return refBlocks.map(b=>({
+    ...b,
+    dirs: b.dirs.map(d=>({
+      ...d,
+      _block: b.block,
+      budget: getBudget(b.block, d.name),
+    }))
+  }));
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════════════════════════════════
+function switchTab(id,btn){
+  document.querySelectorAll(".tab-content").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+id).classList.add("active");
+  btn.classList.add("active");
+  render();
+  renderSvod();
+  if(id==="ref") renderRef();
+  if(id==="income") renderIncome();
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  ТАБ 1 — БЮДЖЕТ
+// ════════════════════════════════════════════════════════════════════
+let barC, pieC;
+
+function renderCards(data){
+  const q = document.getElementById("selQuarter").value;
+  const qk = QUARTERS[q].keys;
+  const totalB = data.reduce((s,b)=>s+b.dirs.reduce((ss,d)=>ss+d.budget,0),0);
+  const totalF = data.reduce((s,b)=>s+b.dirs.reduce((ss,d)=>ss+getVal(d,qk[0])+getVal(d,qk[1])+getVal(d,qk[2]),0),0);
+  const rem=totalB-totalF, p=pct(totalF,totalB);
+  const totalIncome = filterIncByQ(incomes, q).reduce((s,e)=>s+e.amount,0);
+  const netProfit = totalIncome - totalF;
+  document.getElementById("cards").innerHTML=`
+    <div class="card purple">
+      <div class="card-label">💹 Доходы (всего)</div>
+      <div class="card-value">${fmtN(totalIncome)} сом</div>
+    </div>
+    <div class="card ${netProfit>=0?'':'red'}">
+      <div class="card-label">📈 Чистая прибыль</div>
+      <div class="card-value ${netProfit>=0?'profit-positive':'profit-negative'}">${netProfit>=0?'+':''}${fmtN(netProfit)} сом</div>
+      <div class="card-sub">${netProfit>=0?'Прибыль 🟢':'Убыток 🔴'}</div>
+    </div>
+    <div class="card blue">
+      <div class="card-label">Бюджет на квартал (${Q_LABELS[q]})</div>
+      <div class="card-value">${fmtN(totalB)} сом</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Фактические расходы</div>
+      <div class="card-value">${fmtN(totalF)} сом</div>
+      <div class="card-sub">Из бюджета: ${p}%</div>
+    </div>
+    <div class="card ${rem<0?'red':'orange'}">
+      <div class="card-label">Остаток бюджета</div>
+      <div class="card-value">${fmtN(rem)} сом</div>
+    </div>
+    <div class="card ${p>100?'red':p>80?'orange':''}">
+      <div class="card-label">Освоение</div>
+      <div class="card-value">${p}%</div>
+      <div class="card-sub"><div class="pbar-bg" style="margin-top:4px"><div class="pbar ${p>100?'over':''}" style="width:${Math.min(p,100)}%"></div></div></div>
+    </div>`;
+}
+
+function renderCharts(data){
+  const q = document.getElementById("selQuarter").value;
+  const qk = QUARTERS[q].keys;
+  const labels  = data.map(b=>b.block);
+  const budgets = data.map(b=>b.dirs.reduce((s,d)=>s+d.budget,0));
+  const facts   = data.map(b=>b.dirs.reduce((s,d)=>s+getVal(d,qk[0])+getVal(d,qk[1])+getVal(d,qk[2]),0));
+  if(barC)barC.destroy();
+  barC=new Chart(document.getElementById("barChart"),{
+    type:"bar",
+    data:{labels, datasets:[
+      {label:"Бюджет",data:budgets,backgroundColor:"rgba(55,86,35,.35)",borderColor:"#375623",borderWidth:1},
+      {label:"Факт",  data:facts,  backgroundColor:BLOCK_COLORS.map(c=>c+"cc"),borderColor:BLOCK_COLORS,borderWidth:1},
+    ]},
+    options:{plugins:{legend:{position:"bottom"}},responsive:true,maintainAspectRatio:true,
+      scales:{y:{ticks:{callback:v=>fmtN(v)+"сом"}}}}
+  });
+  if(pieC)pieC.destroy();
+  pieC=new Chart(document.getElementById("pieChart"),{
+    type:"pie",
+    data:{labels,datasets:[{data:facts,backgroundColor:BLOCK_COLORS,borderWidth:2}]},
+    options:{plugins:{legend:{position:"bottom"}},responsive:true,maintainAspectRatio:true}
+  });
+}
+
+function renderTable(data){
+  const q     = document.getElementById("selQuarter").value;
+  const months= QUARTERS[q].labels;
+  const qk = QUARTERS[q].keys;
+  const search= document.getElementById("search").value.toLowerCase();
+  let html=`<thead><tr>
+    <th>Наименование блока</th><th>Наименование направления</th>
+    <th>Бюджет (сом)</th>
+    <th>${months[0]}</th><th>${months[1]}</th><th>${months[2]}</th>
+    <th>Остаток (сом)</th><th>% Освоение</th>
+  </tr></thead><tbody>`;
+  let gB=0,gM1=0,gM2=0,gM3=0;
+  data.forEach(blk=>{
+    let bB=0,bM1=0,bM2=0,bM3=0;
+    const rows=blk.dirs.filter(d=>!search||d.name.toLowerCase().includes(search));
+    if(!rows.length)return;
+    rows.forEach((dir,di)=>{
+      const m1=getVal(dir,qk[0]),m2=getVal(dir,qk[1]),m3=getVal(dir,qk[2]);
+      const fact=m1+m2+m3,rem=dir.budget-fact,p=pct(fact,dir.budget);
+      bB+=dir.budget;bM1+=m1;bM2+=m2;bM3+=m3;
+      html+=`<tr>
+        ${di===0?`<td class="block-cell" rowspan="${rows.length}">${blk.block}</td>`:""}
+        <td>${dir.name}</td>
+        <td class="num" style="color:#00008B;cursor:pointer;position:relative;"
+            title="✏ Нажми чтобы изменить бюджет"
+            onclick="editBudgetCell(this,'${blk.block}','${dir.name}')">
+          ${fmtN(dir.budget)}&nbsp;<span style="font-size:10px;opacity:.4;">✏</span>
+        </td>
+        <td class="num" style="background:#FCE4D6;color:#00008B;">${fmtN(m1)}</td>
+        <td class="num" style="background:#FCE4D6;color:#00008B;">${fmtN(m2)}</td>
+        <td class="num" style="background:#FCE4D6;color:#00008B;">${fmtN(m3)}</td>
+        <td class="num" style="${rem<0?"color:#c0392b;font-weight:bold;":""}">${fmtN(rem)}</td>
+        <td class="center">
+          <div style="font-size:11px;margin-bottom:2px;">${p}%</div>
+          <div class="pbar-bg"><div class="pbar ${p>100?"over":""}" style="width:${Math.min(p,100)}%"></div></div>
+        </td>
+      </tr>`;
+    });
+    gB+=bB;gM1+=bM1;gM2+=bM2;gM3+=bM3;
+    const bFact=bM1+bM2+bM3,bP=pct(bFact,bB);
+    html+=`<tr class="total-row">
+      <td colspan="2">Итого — ${blk.block}</td>
+      <td class="num">${fmtN(bB)}</td>
+      <td class="num">${fmtN(bM1)}</td><td class="num">${fmtN(bM2)}</td><td class="num">${fmtN(bM3)}</td>
+      <td class="num">${fmtN(bB-bFact)}</td>
+      <td class="center">${bP}%</td>
+    </tr>`;
+  });
+  const gFact=gM1+gM2+gM3,gP=pct(gFact,gB);
+  html+=`<tr class="grand-row">
+    <td colspan="2">ИТОГО ОБЩИЙ БЮДЖЕТ</td>
+    <td class="num">${fmtN(gB)}</td>
+    <td class="num">${fmtN(gM1)}</td><td class="num">${fmtN(gM2)}</td><td class="num">${fmtN(gM3)}</td>
+    <td class="num">${fmtN(gB-gFact)}</td>
+    <td class="center">${gP}%</td>
+  </tr></tbody>`;
+  document.getElementById("mainTable").innerHTML=html;
+  document.getElementById("tableSubtitle").textContent=`${months[0]} · ${months[1]} · ${months[2]}`;
+}
+
+async function addEntry(){
+  if(currentRole !== "editor"){ showToast("Нет прав на редактирование", "error"); return; }
+  const block  = document.getElementById("fBlock").value;
+  const dir    = document.getElementById("fDir").value.trim();
+  const quarter= document.getElementById("fQuarter").value;
+  const month  = document.getElementById("fMonth").value;
+  const date   = document.getElementById("fDate").value;
+  const desc   = document.getElementById("fDesc").value.trim();
+  const amount = parseFloat(document.getElementById("fAmount").value);
+  if(!dir||isNaN(amount)||amount<=0){showToast("Укажите направление и сумму!", "warning");return;}
+  const monthName = QUARTERS[quarter].labels[QUARTERS[quarter].keys.indexOf(month)];
+
+  // Получить курс на дату транзакции
+  const btn = document.querySelector("button[onclick='addEntry()']");
+  btn.textContent="⏳..."; btn.disabled=true;
+  const res = await fetchRate(date);
+  btn.textContent="✔ Добавить"; btn.disabled=false;
+
+  const usdRate   = res?.rate   || null;
+  const rateDate  = res?.actualDate || date;
+  const amountUsd = usdRate ? parseFloat((amount * usdRate).toFixed(2)) : null;
+  const id        = Date.now().toString();
+
+  // ── Автоматически добавляем новое Направление в Справочник ──────────
+  autoAddDirToRef(block, dir);
+
+  const newEntry = {id,block,dir,quarter,month,monthName,date,desc,amount,amountUsd,usdRate,rateDate};
+  extras.push(newEntry);
+  saveExtras();
+
+  // Sync to Google Sheets (Apps Script expects data as JSON string)
+  postToSheets({
+    action: "addExpense",
+    data: JSON.stringify({id, block, dir, quarter, month, monthName, date, desc,
+      amount, amountUsd: amountUsd ?? null, usdRate: usdRate ?? null, rateDate})
+  });
+  document.getElementById("fAmount").value="";
+  document.getElementById("fDesc").value="";
+  document.getElementById("usdPreview").textContent="—";
+  document.getElementById("rateHint").textContent="";
+  render();
+  showToast(`Расход добавлен: ${dir} — ${amount.toLocaleString()} сом`, "success");
+}
+
+function updateDirs(){
+  const block=document.getElementById("fBlock").value;
+  const found=refBlocks.find(b=>b.block===block);
+  const dl=document.getElementById("dirList");
+  dl.innerHTML=(found?.dirs||[]).map(d=>`<option value="${d.name}">`).join("");
+  document.getElementById("fDir").value="";
+}
+
+// Автоматически добавляет новое Направление в Справочник если его ещё нет
+function autoAddDirToRef(block, dir){
+  if(!block || !dir) return;
+  let blkObj = refBlocks.find(b => b.block === block);
+
+  // Если блок не существует — создаём его
+  if(!blkObj){
+    const colors = ["#4EA72A","#2471a3","#e67e22","#8e44ad","#c0392b","#16a085","#d35400"];
+    blkObj = { block, color: colors[refBlocks.length % colors.length], dirs: [] };
+    refBlocks.push(blkObj);
+  }
+
+  // Если направление уже есть — ничего не делаем
+  const exists = blkObj.dirs.some(d => d.name === dir);
+  if(exists) return;
+
+  // Добавляем новое направление с нулевыми значениями
+  blkObj.dirs.push({
+    name: dir, budget: 0,
+    m1:0, m2:0, m3:0, m4:0, m5:0, m6:0,
+    m7:0, m8:0, m9:0, m10:0, m11:0, m12:0
+  });
+
+  // Сохраняем в localStorage + синхронизируем с Google Sheets через updateRef
+  // (Apps Script: clearContents → header → appendRow для каждого блока/направления)
+  saveRefBlocks();
+
+  // Обновляем datalist и все выпадающие списки
+  updateDirs();
+  if(typeof updateFormBlocks === "function") updateFormBlocks();
+  renderRef();
+  syncAll();
+
+  showToast(`✅ «${dir}» добавлено в Справочник → ${block}`, "success", 3000);
+}
+
+function updateMonths(){
+  const q=document.getElementById("fQuarter").value;
+  const qd=QUARTERS[q];
+  document.getElementById("fMonth").innerHTML=
+    qd.keys.map((k,i)=>`<option value="${k}">${qd.labels[i]}</option>`).join("");
+}
+
+// Синхронизация всех вкладок одновременно
+function syncAll(){
+  render();
+  renderSvod();
+}
+
+function render(){
+  const filterBlock=document.getElementById("selBlock").value;
+  let data=buildData();
+  if(filterBlock)data=data.filter(b=>b.block===filterBlock);
+  renderCards(data);
+  renderTable(data);
+  renderCharts(buildData());
+  // Синхронизация: обновляем Сводку если она уже была открыта
+  if(document.getElementById("tab-svod").classList.contains("active")) renderSvod();
+}
+
+function exportCSV(){
+  const data=buildData();
+  let csv="Блок,Направление,Бюджет,Апрель,Май,Июнь,Остаток,% Освоение\n";
+  data.forEach(b=>b.dirs.forEach(d=>{
+    const m1=getVal(d,"m1"),m2=getVal(d,"m2"),m3=getVal(d,"m3"),f=m1+m2+m3;
+    csv+=`"${b.block}","${d.name}",${d.budget},${m1},${m2},${m3},${d.budget-f},${pct(f,d.budget)}%\n`;
+  }));
+  const a=document.createElement("a");
+  a.href="data:text/csv;charset=utf-8,"+encodeURIComponent("\ufeff"+csv);
+  a.download="бюджет_2026.csv";a.click();
+  showToast("CSV файл скачан!", "success");
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  ЭКСПОРТ / ИМПОРТ / ПОДЕЛИТЬСЯ
+// ════════════════════════════════════════════════════════════════════
+
+function getAllData(){
+  return {
+    version: "1.0",
+    date: new Date().toISOString(),
+    refBlocks,
+    extras,
+    quarterlyBudgets,
+    hiddenBase: [...hiddenBase],
+  };
+}
+
+function exportData(){
+  const json = JSON.stringify(getAllData(), null, 2);
+  const a = document.createElement("a");
+  a.href = "data:application/json;charset=utf-8," + encodeURIComponent(json);
+  a.download = "бюджет_данные_" + new Date().toISOString().slice(0,10) + ".json";
+  a.click();
+}
+
+function importData(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!data.refBlocks) throw new Error("Неверный формат файла");
+      if(!confirm("Загрузить данные из файла? Текущие данные будут заменены.")) return;
+      // Применяем данные
+      refBlocks = data.refBlocks;
+      saveRefBlocks();
+      extras = data.extras || [];
+      saveExtras();
+      quarterlyBudgets = data.quarterlyBudgets || data.customBudgets || {};
+      saveCustomBudgets();
+      hiddenBase = new Set(data.hiddenBase || []);
+      saveHiddenBase();
+      // Обновляем интерфейс
+      updateFormBlocks();
+      render();
+      renderSvod();
+      showToast("Данные успешно загружены!", "success");
+    } catch(err){
+      showToast("Ошибка чтения файла: " + err.message, "error");
+    }
+    event.target.value = ""; // сбрасываем input для повторного импорта
+  };
+  reader.readAsText(file);
+}
+
+function shareData(){
+  try{
+    const json = JSON.stringify(getAllData());
+    const compressed = btoa(encodeURIComponent(json));
+    const url = window.location.href.split('#')[0] + '#data=' + compressed;
+    // Копируем в буфер обмена
+    if(navigator.clipboard){
+      navigator.clipboard.writeText(url).then(()=>{
+        showShareToast("✅ Ссылка скопирована! Откройте её на другом устройстве.");
+      }).catch(()=> showSharePrompt(url));
+    } else {
+      showSharePrompt(url);
+    }
+  } catch(e){
+    showToast("Не удалось создать ссылку: " + e.message, "error");
+  }
+}
+
+function showShareToast(msg){
+  let t = document.getElementById("shareToast");
+  if(!t){
+    t = document.createElement("div");
+    t.id = "shareToast";
+    t.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#375623;color:#fff;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:bold;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.3);";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.display = "block";
+  setTimeout(()=>{ t.style.display="none"; }, 4000);
+}
+
+function showSharePrompt(url){
+  const short = url.length > 80 ? url.slice(0,80)+"..." : url;
+  prompt("Скопируйте эту ссылку и откройте на другом устройстве:", url);
+}
+
+// При загрузке страницы — проверяем есть ли данные в URL
+function checkUrlData(){
+  const hash = window.location.hash;
+  if(!hash.startsWith('#data=')) return;
+  try{
+    const compressed = hash.slice(6);
+    const json = decodeURIComponent(atob(compressed));
+    const data = JSON.parse(json);
+    if(!data.refBlocks) return;
+    const choice = confirm("📲 В ссылке найдены данные бюджета!\n\nЗагрузить их? (текущие данные браузера будут заменены)");
+    if(!choice) return;
+    refBlocks = data.refBlocks;
+    saveRefBlocks();
+    extras = data.extras || [];
+    saveExtras();
+    customBudgets = data.customBudgets || {};
+    saveCustomBudgets();
+    hiddenBase = new Set(data.hiddenBase || []);
+    saveHiddenBase();
+    // Убираем данные из URL (чистим адресную строку)
+    history.replaceState(null, "", window.location.pathname);
+    showToast("Данные из ссылки успешно загружены!", "success");
+  } catch(e){
+    console.warn("Не удалось прочитать данные из URL:", e);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  ТАБ 2 — СВОДКА
+// ════════════════════════════════════════════════════════════════════
+
+// Заголовки сводки и текущая сортировка
+const SV_COLS = [
+  { key:"#",         label:"№",              sortable:false },
+  { key:"date",      label:"📅 Дата",        sortable:true  },
+  { key:"quarter",   label:"🗓 Квартал",      sortable:true  },
+  { key:"monthName", label:"📆 Месяц",       sortable:true  },
+  { key:"desc",      label:"📝 Описание",    sortable:true  },
+  { key:"block",     label:"🏷 Блок",        sortable:true  },
+  { key:"dir",       label:"📌 Направление", sortable:true  },
+  { key:"amount",    label:"💰 Сумма (сом)",  sortable:true  },
+  { key:"amountUsd", label:"💵 Сумма (USD)", sortable:true  },
+  { key:"usdRate",   label:"📈 Курс KGS/USD",sortable:false },
+  { key:"del",       label:"🗑",             sortable:false },
+];
+let svSort = { key:"date", asc:false };
+
+// Авто-даты для базовых строк: первое число месяца
+const BASE_MONTH_DATES = { m1:"2026-04-01", m2:"2026-05-01", m3:"2026-06-01" };
+
+// Строим все строки сводки: базовые + вручную добавленные
+function buildAllSvodRows(){
+  const Q2_MONTHS = [
+    {key:"m1", name:"Апрель", quarter:"Q2"},
+    {key:"m2", name:"Май",    quarter:"Q2"},
+    {key:"m3", name:"Июнь",   quarter:"Q2"},
+  ];
+  const baseRows = [];
+  buildData().forEach(blk=>{
+    blk.dirs.forEach(dir=>{
+      Q2_MONTHS.forEach(m=>{
+        const val = dir[m.key]||0;
+        const baseKey = `${blk.block}::${dir.name}::${m.key}`;
+        if(val>0 && !hiddenBase.has(baseKey)) baseRows.push({
+          block: blk.block, dir: dir.name,
+          quarter: m.quarter, month: m.key, monthName: m.name,
+          date: BASE_MONTH_DATES[m.key],
+          desc:"(базовые данные)", amount: val,
+          amountUsd: null, usdRate: null, rateDate: null,
+          _base: true, _baseKey: baseKey,
+        });
+      });
+    });
+  });
+  const extraRows = extras.map((e,i)=>({...e, _base:false, _extrasIdx:i}));
+  return [...baseRows, ...extraRows];
+}
+
+function getSvodRows(){
+  const qf     = document.getElementById("svQuarter").value;
+  const bf     = document.getElementById("svBlock").value;
+  const df     = document.getElementById("svDir").value;
+  const search = document.getElementById("svSearch").value.toLowerCase();
+
+  return buildAllSvodRows().filter(e=>{
+    if(qf  && e.quarter!==qf)   return false;
+    if(bf  && e.block!==bf)     return false;
+    if(df  && e.dir!==df)       return false;
+    if(search && !( (e.desc||"").toLowerCase().includes(search) ||
+                     e.block.toLowerCase().includes(search)     ||
+                     e.dir.toLowerCase().includes(search)        )) return false;
+    return true;
+  });
+}
+
+function renderSvod(){
+  // Обновить фильтр направлений
+  const bf=document.getElementById("svBlock").value;
+  const allDirs=[...new Set(extras.map(e=>e.dir))].filter(d=>{
+    if(!bf)return true;
+    return extras.some(e=>e.block===bf&&e.dir===d);
+  });
+  const svDir=document.getElementById("svDir");
+  const curDir=svDir.value;
+  svDir.innerHTML=`<option value="">Все направления</option>`
+    +allDirs.map(d=>`<option ${d===curDir?"selected":""}>${d}</option>`).join("");
+
+  let rows = getSvodRows();
+
+  // Сортировка
+  if(svSort.key!=="#"){
+    rows=[...rows].sort((a,b)=>{
+      let va=a[svSort.key]??"", vb=b[svSort.key]??"";
+      if(svSort.key==="amount"){va=+va;vb=+vb;}
+      if(va<vb)return svSort.asc?-1:1;
+      if(va>vb)return svSort.asc?1:-1;
+      return 0;
+    });
+  }
+
+  // Счётчик и итог
+  document.getElementById("svCount").textContent=rows.length;
+  const total=rows.reduce((s,r)=>s+(+r.amount||0),0);
+  document.getElementById("svTotal").textContent=
+    rows.length ? `Итого: ${fmtN(total)} сом` : "";
+
+  // Заголовок
+  document.getElementById("svHead").innerHTML=SV_COLS.map(c=>`
+    <th style="background:${c.sortable?'#1a3a6b':'#2c3e50'};color:#fff;"
+        onclick="${c.sortable?`sortSvod('${c.key}')`:''}" >
+      ${c.label}
+      ${c.sortable ? `<span class="sort-icon">${svSort.key===c.key?(svSort.asc?'▲':'▼'):'⇅'}</span>` : ""}
+    </th>`).join("");
+
+  // Тело
+  const tbody=document.getElementById("svBody");
+  if(!rows.length){
+    tbody.innerHTML=`<tr><td colspan="${SV_COLS.length}" >
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <p>Записей не найдено.<br>Добавьте расходы на вкладке <b>Бюджет</b>.</p>
+      </div></td></tr>`;
+    return;
+  }
+
+  const qClass={Q1:"q1",Q2:"q2",Q3:"q3",Q4:"q4"};
+  const tClass=["tag-0","tag-1","tag-2","tag-3"];
+
+  const totalUsd = rows.reduce((s,r)=>s+(+r.amountUsd||0),0);
+
+  tbody.innerHTML=rows.map((r,i)=>{
+    const bi      = BLOCK_IDX[r.block]??0;
+    const usdCell = r.amountUsd!=null
+      ? `<span style="color:#1a5276;font-weight:bold;">$\u00a0${parseFloat(r.amountUsd).toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2})}</span>`
+      : `<span style="color:#ccc;font-size:11px;">—</span>`;
+    const rateCell= r.usdRate
+      ? `<span style="font-size:11px;color:#666;">1&nbsp;$&nbsp;=&nbsp;${Math.round(1/r.usdRate).toLocaleString("ru-RU")}&nbsp;сом<br><span style="color:#aaa;">${r.rateDate||""}</span></span>`
+      : `<span style="color:#ccc;font-size:11px;">—</span>`;
+    const delCell = r._base
+      ? `<button onclick="hideBaseRow('${r._baseKey}')" title="Скрыть эту строку"
+           style="background:none;border:1px solid #f5c6cb;border-radius:4px;
+                  color:#c0392b;cursor:pointer;padding:3px 8px;font-size:13px;"
+           onmouseover="this.style.background='#fde8e8'"
+           onmouseout="this.style.background='none'">🗑</button>`
+      : `<button onclick="delEntry(${r._extrasIdx})" title="Удалить запись"
+           style="background:none;border:1px solid #f5c6cb;border-radius:4px;
+                  color:#c0392b;cursor:pointer;padding:3px 8px;font-size:13px;"
+           onmouseover="this.style.background='#fde8e8'"
+           onmouseout="this.style.background='none'">🗑</button>`;
+    const rowBg = r._base ? "" : "style=\"background:#f0fff4;\"";
+    return `<tr ${rowBg}>
+      <td class="row-num">${i+1}</td>
+      <td class="center" style="white-space:nowrap;">${r.date||"—"}</td>
+      <td class="center"><span class="q-badge ${qClass[r.quarter]||"q2"}">${Q_LABELS[r.quarter]||r.quarter}</span></td>
+      <td class="center">${r.monthName||"—"}</td>
+      <td>${r.desc||'<span style="color:#ccc;">—</span>'}</td>
+      <td><span class="block-tag ${tClass[bi]}">${r.block}</span></td>
+      <td style="color:#374151;">${r.dir||"—"}</td>
+      <td class="num"><span class="amt ${r.amount>100000?"big":""}">${fmtN(r.amount)}&nbsp;сом</span></td>
+      <td class="num">${usdCell}</td>
+      <td class="center">${rateCell}</td>
+      <td class="center">${delCell}</td>
+    </tr>`;
+  }).join("")
+  + `<tr class="sv-total">
+      <td class="center" colspan="7" style="padding:10px 12px;">Итого по выбранным записям</td>
+      <td class="num" style="padding:10px 12px;">${fmtN(total)}&nbsp;сом</td>
+      <td class="num" style="padding:10px 12px;color:#1a5276;">$&nbsp;${totalUsd.toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td></td><td></td>
+    </tr>`;
+}
+
+function resetBudgets(){
+  const q = _currentQ();
+  if(!confirm(`Сбросить бюджеты ${q} ${currentYear} к значениям из Google Sheets?`)) return;
+  // Удаляем только бюджеты текущего года и квартала
+  Object.keys(quarterlyBudgets).forEach(k => {
+    if(k.startsWith(`${currentYear}::${q}::`)) delete quarterlyBudgets[k];
+  });
+  // Восстанавливаем из refBlocks (данные Google Sheets)
+  refBlocks.forEach(b => b.dirs.forEach(d => {
+    quarterlyBudgets[`${currentYear}::${q}::${b.block}::${d.name}`] = d.budget;
+  }));
+  saveCustomBudgets();
+  render();
+}
+
+function delEntry(i){
+  if(currentRole !== "editor"){ showToast("Нет прав на редактирование", "error"); return; }
+  if(!confirm("Удалить эту запись?")) return;
+  const entry = extras[i];
+  extras.splice(i,1);
+  saveExtras();
+  // Sync delete to Google Sheets
+  if(entry?.id) postToSheets({ action: "deleteExpense", id: entry.id });
+  syncAll();
+}
+
+function sortSvod(key){
+  if(svSort.key===key) svSort.asc=!svSort.asc;
+  else { svSort.key=key; svSort.asc=true; }
+  renderSvod();
+}
+
+function clearSvFilters(){
+  document.getElementById("svQuarter").value="";
+  document.getElementById("svBlock").value="";
+  document.getElementById("svDir").value="";
+  document.getElementById("svSearch").value="";
+  renderSvod();
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  ТАБ 3 — СПРАВОЧНИК
+// ════════════════════════════════════════════════════════════════════
+
+function renderRef(){
+  const container = document.getElementById("refBlocks");
+  if(!refBlocks.length){
+    container.innerHTML=`<div class="empty-state"><div class="empty-icon">📂</div><p>Блоков нет. Добавьте первый блок выше.</p></div>`;
+    return;
+  }
+  container.innerHTML = refBlocks.map((b,bi)=>`
+    <div class="ref-block-card">
+      <div class="ref-block-head" style="background:${b.color};">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span id="ref-block-name-${bi}">${b.block}</span>
+          <span style="font-size:11px;opacity:.75;font-weight:normal;">${b.dirs.length} напр.</span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="icon-btn" title="Изменить название"
+            onclick="startEditBlock(${bi})" style="color:#fff;">✏</button>
+          <input type="color" value="${b.color}" title="Цвет блока"
+            onchange="changeBlockColor(${bi},this.value)"
+            style="width:28px;height:28px;padding:1px;border:2px solid rgba(255,255,255,.5);border-radius:4px;cursor:pointer;background:none;">
+          <button class="icon-btn danger" title="Удалить блок"
+            onclick="deleteBlock(${bi})" style="color:#fff;">🗑</button>
+        </div>
+      </div>
+      <div class="ref-block-body">
+        <table class="ref-dir-table">
+          <thead>
+            <tr>
+              <th style="width:40%">Направление</th>
+              <th style="width:18%">Бюджет (сом)</th>
+              <th style="width:12%">Апрель</th>
+              <th style="width:12%">Май</th>
+              <th style="width:12%">Июнь</th>
+              <th style="width:6%"></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${b.dirs.map((d,di)=>`
+              <tr>
+                <td><span id="ref-dir-name-${bi}-${di}">${d.name}</span></td>
+                <td class="num"><span id="ref-dir-bud-${bi}-${di}">${fmtN(d.budget)}</span></td>
+                <td class="num">${fmtN(d.m1)}</td>
+                <td class="num">${fmtN(d.m2)}</td>
+                <td class="num">${fmtN(d.m3)}</td>
+                <td class="center">
+                  <button class="icon-btn" title="Редактировать" onclick="startEditDir(${bi},${di})">✏</button>
+                  <button class="icon-btn danger" title="Удалить" onclick="deleteDir(${bi},${di})">🗑</button>
+                </td>
+              </tr>`).join("")}
+            <tr class="add-dir-row">
+              <td colspan="6">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <input type="text" id="ref-new-dir-${bi}" placeholder="+ Новое направление" style="min-width:180px;" class="ref-inline-input">
+                  <input type="number" id="ref-new-bud-${bi}" placeholder="Бюджет (сом)" style="width:140px;" class="ref-inline-input" min="0">
+                  <button class="btn btn-sm" onclick="addDir(${bi})">Добавить</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`).join("");
+}
+
+// ── Блоки ──────────────────────────────────────────────────────────
+
+function addBlock(){
+  if(currentRole !== "editor"){ showToast("Нет прав на редактирование", "error"); return; }
+  const name = document.getElementById("refNewBlock").value.trim();
+  const color= document.getElementById("refNewColor").value;
+  if(!name){ showToast("Введите название блока!", "warning"); return; }
+  if(refBlocks.find(b=>b.block===name)){ showToast("Такой блок уже есть!", "warning"); return; }
+  refBlocks.push({block:name, color, dirs:[]});
+  saveRefBlocks();
+  document.getElementById("refNewBlock").value="";
+  syncAll(); renderRef(); updateFormBlocks();
+}
+
+function deleteBlock(bi){
+  if(!confirm(`Удалить блок «${refBlocks[bi].block}» и все его направления?`)) return;
+  refBlocks.splice(bi,1);
+  saveRefBlocks();
+  syncAll(); renderRef(); updateFormBlocks();
+}
+
+function changeBlockColor(bi, color){
+  refBlocks[bi].color = color;
+  saveRefBlocks();
+  renderRef(); // только визуал
+}
+
+function startEditBlock(bi){
+  const span = document.getElementById(`ref-block-name-${bi}`);
+  const cur  = refBlocks[bi].block;
+  span.outerHTML=`<input id="ref-block-edit-${bi}" class="ref-inline-input"
+    value="${cur}" style="width:180px;background:rgba(255,255,255,.25);color:#fff;border-color:rgba(255,255,255,.6);"
+    onblur="saveBlockName(${bi})" onkeydown="if(event.key==='Enter')this.blur();">`;
+  document.getElementById(`ref-block-edit-${bi}`).focus();
+}
+
+function saveBlockName(bi){
+  const inp = document.getElementById(`ref-block-edit-${bi}`);
+  if(!inp) return;
+  const newName = inp.value.trim();
+  if(newName && newName !== refBlocks[bi].block){
+    // Обновить extras тоже
+    extras.forEach(e=>{ if(e.block===refBlocks[bi].block) e.block=newName; });
+    saveExtras();
+    refBlocks[bi].block = newName;
+    saveRefBlocks();
+    syncAll(); updateFormBlocks();
+  }
+  renderRef();
+}
+
+// ── Направления ────────────────────────────────────────────────────
+
+function addDir(bi){
+  const name = document.getElementById(`ref-new-dir-${bi}`).value.trim();
+  const bud  = parseFloat(document.getElementById(`ref-new-bud-${bi}`).value)||0;
+  if(!name){ showToast("Введите название направления!", "warning"); return; }
+  if(refBlocks[bi].dirs.find(d=>d.name===name)){ showToast("Такое направление уже есть!", "warning"); return; }
+  refBlocks[bi].dirs.push({name, budget:bud, m1:0, m2:0, m3:0, m4:0, m5:0, m6:0, m7:0, m8:0, m9:0, m10:0, m11:0, m12:0});
+  saveRefBlocks();
+  syncAll(); renderRef(); updateFormBlocks();
+}
+
+function deleteDir(bi,di){
+  const d = refBlocks[bi].dirs[di];
+  if(!confirm(`Удалить направление «${d.name}»?`)) return;
+  refBlocks[bi].dirs.splice(di,1);
+  saveRefBlocks();
+  syncAll(); renderRef(); updateFormBlocks();
+}
+
+function startEditDir(bi,di){
+  const d = refBlocks[bi].dirs[di];
+  const nameSp = document.getElementById(`ref-dir-name-${bi}-${di}`);
+  const budSp  = document.getElementById(`ref-dir-bud-${bi}-${di}`);
+  nameSp.outerHTML=`<input id="ref-dn-${bi}-${di}" class="ref-inline-input" value="${d.name}"
+    onblur="saveDirName(${bi},${di})" onkeydown="if(event.key==='Enter')this.blur();">`;
+  budSp.outerHTML=`<input id="ref-db-${bi}-${di}" class="ref-inline-input" type="number"
+    value="${d.budget}" min="0" style="width:110px;"
+    onblur="saveDirBudget(${bi},${di})" onkeydown="if(event.key==='Enter')this.blur();">`;
+  document.getElementById(`ref-dn-${bi}-${di}`).focus();
+}
+
+function saveDirName(bi,di){
+  const inp=document.getElementById(`ref-dn-${bi}-${di}`);
+  if(!inp)return;
+  const newName=inp.value.trim();
+  if(newName && newName!==refBlocks[bi].dirs[di].name){
+    extras.forEach(e=>{ if(e.block===refBlocks[bi].block&&e.dir===refBlocks[bi].dirs[di].name) e.dir=newName; });
+    saveExtras();
+    refBlocks[bi].dirs[di].name=newName;
+    saveRefBlocks();
+    syncAll(); updateFormBlocks();
+  }
+  renderRef();
+}
+
+function saveDirBudget(bi,di){
+  const inp=document.getElementById(`ref-db-${bi}-${di}`);
+  if(!inp)return;
+  const val=parseFloat(inp.value);
+  if(!isNaN(val)&&val>=0){
+    refBlocks[bi].dirs[di].budget=val;
+    saveRefBlocks();
+    syncAll();
+  }
+  renderRef();
+}
+
+
+
+// Обновить выпадающие списки в форме добавления расхода
+function updateFormBlocks(){
+  const sel=document.getElementById("fBlock");
+  if(!sel)return;
+  sel.innerHTML=refBlocks.map(b=>`<option>${b.block}</option>`).join("");
+  updateDirs();
+  // Обновить фильтры
+  ["selBlock","svBlock"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    const cur=el.value;
+    el.innerHTML=`<option value="">Все блоки</option>`
+      +refBlocks.map(b=>`<option ${b.block===cur?"selected":""}>${b.block}</option>`).join("");
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  ТАБ 4 — ДОХОДЫ
+// ════════════════════════════════════════════════════════════════════
+let incomePieC = null, incomeBarC = null;
+
+// Определить квартал по дате "YYYY-MM-DD"
+function getIncomeQuarter(dateStr){
+  if(!dateStr) return null;
+  const m = parseInt(dateStr.split("-")[1]);
+  if(m <= 3) return "Q1";
+  if(m <= 6) return "Q2";
+  if(m <= 9) return "Q3";
+  return "Q4";
+}
+
+// Отфильтровать массив доходов по кварталу И году (пустая строка = все кварталы)
+function filterIncByQ(arr, q){
+  const yearStr = String(currentYear);
+  return arr.filter(e => {
+    // Фильтр по году
+    if(e.date && !e.date.startsWith(yearStr)) return false;
+    // Фильтр по кварталу
+    if(q && getIncomeQuarter(e.date) !== q) return false;
+    return true;
+  });
+}
+
+function clearIncomeFilters(){
+  const qf = document.getElementById("incomeQFilter");
+  const cf = document.getElementById("incomeCatFilter");
+  if(qf) qf.value = "";
+  if(cf) cf.value = "";
+  renderIncome();
+}
+
+async function previewIncomeRate(){
+  const date = document.getElementById("iDate").value;
+  const amount = parseFloat(document.getElementById("iAmount").value);
+  if(!amount || isNaN(amount)) { document.getElementById("iUsdPreview").textContent="—"; return; }
+  const res = await fetchRate(date);
+  if(res?.rate){
+    const usd = (amount * res.rate).toFixed(2);
+    document.getElementById("iUsdPreview").textContent = usd + " $";
+    document.getElementById("iRateHint").textContent = "1 сом = " + res.rate.toFixed(6) + " USD (" + (res.actualDate||date) + ")";
+  }
+}
+
+async function addIncome(){
+  if(currentRole !== "editor"){ showToast("Нет прав на редактирование", "error"); return; }
+  const category = document.getElementById("iCategory").value;
+  const date     = document.getElementById("iDate").value;
+  const amount   = parseFloat(document.getElementById("iAmount").value);
+  const desc     = document.getElementById("iDesc").value.trim();
+  if(!date || isNaN(amount) || amount <= 0){
+    showToast("Укажите дату и сумму!", "warning"); return;
+  }
+  const btn = document.querySelector("button[onclick='addIncome()']");
+  btn.textContent="⏳..."; btn.disabled=true;
+  const res = await fetchRate(date);
+  btn.textContent="✔ Добавить доход"; btn.disabled=false;
+
+  const usdRate   = res?.rate || null;
+  const rateDate  = res?.actualDate || date;
+  const amountUsd = usdRate ? parseFloat((amount * usdRate).toFixed(2)) : null;
+  const id        = Date.now().toString();
+
+  const entry = {id, date, category, desc, amount, amountUsd, usdRate, rateDate};
+  incomes.push(entry);
+  saveIncomes();
+
+  postToSheets({
+    action: "addIncome",
+    data: JSON.stringify({id, date, category, desc, amount, amountUsd: amountUsd??null, usdRate: usdRate??null, rateDate})
+  });
+
+  document.getElementById("iAmount").value="";
+  document.getElementById("iDesc").value="";
+  document.getElementById("iUsdPreview").textContent="—";
+  document.getElementById("iRateHint").textContent="—";
+  renderIncome();
+  renderCards(buildData()); // update net profit card
+  showToast(`Доход добавлен: ${category} — ${amount.toLocaleString()} сом`, "success");
+}
+
+function delIncome(i){
+  if(currentRole !== "editor"){ showToast("Нет прав", "error"); return; }
+  if(!confirm("Удалить эту запись о доходе?")) return;
+  const entry = incomes[i];
+  incomes.splice(i,1);
+  saveIncomes();
+  if(entry?.id) postToSheets({ action:"deleteIncome", id: entry.id });
+  renderIncome();
+  renderCards(buildData());
+}
+
+function renderIncome(){
+  // ── Применяем фильтры ────────────────────────────────────────────
+  const qf  = document.getElementById("incomeQFilter")?.value  || "";
+  const catf= document.getElementById("incomeCatFilter")?.value || "";
+  const yearStr = String(currentYear);
+  const filtered = incomes.filter(e => {
+    if(e.date && !e.date.startsWith(yearStr))      return false;
+    if(qf   && getIncomeQuarter(e.date) !== qf)   return false;
+    if(catf  && e.category !== catf)               return false;
+    return true;
+  });
+
+  // Обновляем счётчик фильтра
+  const fcEl = document.getElementById("incomeFilterCount");
+  if(fcEl) fcEl.textContent = filtered.length;
+
+  const totalInc = filtered.reduce((s,e)=>s+e.amount,0);
+  const data = buildData();
+
+  // Расходы за тот же период (если квартал выбран — только за него)
+  const qKeys = qf ? QUARTERS[qf].keys : ["m1","m2","m3","m4","m5","m6","m7","m8","m9","m10","m11","m12"];
+  const allKeys = ["m1","m2","m3","m4","m5","m6","m7","m8","m9","m10","m11","m12"];
+  const totalExp = data.reduce((s,b)=>s+b.dirs.reduce((ss,d)=>ss+qKeys.reduce((sss,k)=>sss+getVal(d,k),0),0),0);
+  const netProfit = totalInc - totalExp;
+  const totalUsd  = filtered.reduce((s,e)=>s+(e.amountUsd||0),0);
+  const periodLabel = currentYear + (qf ? " · " + Q_LABELS[qf] : " · все кварталы");
+
+  // ── Stats cards ────────────────────────────────────────────────────
+  const statsEl = document.getElementById("incomeStats");
+  if(statsEl) statsEl.innerHTML = `
+    <div class="income-stat blue">
+      <div class="stat-label">💰 Доходы (${periodLabel})</div>
+      <div class="stat-value">${fmtN(totalInc)} <span style="font-size:14px;font-weight:400">сом</span></div>
+      <div class="stat-sub">≈ $${totalUsd.toLocaleString("ru-RU",{maximumFractionDigits:0})} · ${filtered.length} из ${incomes.length} записей</div>
+    </div>
+    <div class="income-stat red">
+      <div class="stat-label">📤 Расходы (${periodLabel})</div>
+      <div class="stat-value">${fmtN(totalExp)} <span style="font-size:14px;font-weight:400">сом</span></div>
+      <div class="stat-sub">За ${periodLabel}</div>
+    </div>
+    <div class="income-stat profit">
+      <div class="stat-label">${netProfit>=0?'📈':'📉'} Чистая прибыль (${periodLabel})</div>
+      <div class="stat-value ${netProfit>=0?'profit-positive':'profit-negative'}">${netProfit>=0?'+':''}${fmtN(netProfit)} <span style="font-size:14px;font-weight:400">сом</span></div>
+      <div class="stat-sub">${netProfit>=0?'🟢 Прибыльно':'🔴 Убыточно'}</div>
+    </div>
+  `;
+
+  // ── Net Profit Banner ──────────────────────────────────────────────
+  const banner = document.getElementById("netProfitBanner");
+  const npVal  = document.getElementById("netProfitValue");
+  const npSub  = document.getElementById("netProfitSub");
+  const npIcon = document.getElementById("netProfitIcon");
+  if(banner){
+    banner.style.background = netProfit >= 0
+      ? "linear-gradient(135deg,#1b5e20 0%,#2e7d32 50%,#43a047 100%)"
+      : "linear-gradient(135deg,#b71c1c 0%,#c62828 50%,#e53935 100%)";
+    if(npVal) npVal.textContent = (netProfit>=0?"+":"") + fmtN(netProfit) + " сом";
+    if(npSub) npSub.textContent = netProfit>=0
+      ? `Доходы превышают расходы на ${fmtN(netProfit)} сом`
+      : `Расходы превышают доходы на ${fmtN(Math.abs(netProfit))} сом`;
+    if(npIcon) npIcon.textContent = netProfit>=0 ? "📈" : "📉";
+  }
+
+  // ── Pie Chart: Income by category ─────────────────────────────────
+  const catMap = {};
+  filtered.forEach(e=>{ catMap[e.category]=(catMap[e.category]||0)+e.amount; });
+  const catLabels = Object.keys(catMap);
+  const catData   = catLabels.map(c=>catMap[c]);
+  const catColors = catLabels.map(c=>INCOME_CAT_COLORS[c]||"#546e7a");
+
+  const pieCtx = document.getElementById("incomePieChart");
+  if(pieCtx){
+    if(incomePieC) incomePieC.destroy();
+    if(catLabels.length){
+      incomePieC = new Chart(pieCtx, {
+        type:"doughnut",
+        data:{ labels:catLabels, datasets:[{ data:catData, backgroundColor:catColors, borderWidth:2, borderColor:"#fff" }] },
+        options:{
+          plugins:{ legend:{ position:"bottom", labels:{ font:{size:11} } },
+            tooltip:{ callbacks:{ label: ctx => ` ${ctx.label}: ${fmtN(ctx.raw)} сом` } } },
+          responsive:true, maintainAspectRatio:true,
+          cutout:"55%"
+        }
+      });
+    }
+  }
+
+  // ── Bar Chart: Income vs Expenses by month ─────────────────────────
+  // Определяем какие месяцы показывать (если квартал — только 3 месяца)
+  const ALL_MONTH_LABELS   = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
+  const ALL_MONTH_KEYS_LIST= ["m1","m2","m3","m4","m5","m6","m7","m8","m9","m10","m11","m12"];
+  const chartMonthKeys  = qf ? QUARTERS[qf].keys   : ALL_MONTH_KEYS_LIST;
+  const chartMonthLabels= qf ? QUARTERS[qf].labels : ALL_MONTH_LABELS;
+
+  const incByMonth = chartMonthKeys.map(k=>{
+    const mIdx = ALL_MONTH_KEYS_LIST.indexOf(k);
+    return filtered.filter(e=>parseInt(e.date?.split("-")[1])-1 === mIdx).reduce((s,e)=>s+e.amount,0);
+  });
+  const expByMonth = chartMonthKeys.map(k=>
+    data.reduce((s,b)=>s+b.dirs.reduce((ss,d)=>ss+getVal(d,k),0),0)
+  );
+
+  const barCtx = document.getElementById("incomeBarChart");
+  if(barCtx){
+    if(incomeBarC) incomeBarC.destroy();
+    incomeBarC = new Chart(barCtx, {
+      type:"bar",
+      data:{
+        labels: chartMonthLabels,
+        datasets:[
+          { label:"Доходы",  data:incByMonth, backgroundColor:"rgba(46,125,50,.75)",  borderColor:"#2e7d32", borderWidth:1 },
+          { label:"Расходы", data:expByMonth, backgroundColor:"rgba(198,40,40,.65)",  borderColor:"#c62828", borderWidth:1 },
+        ]
+      },
+      options:{
+        plugins:{ legend:{ position:"bottom" },
+          tooltip:{ callbacks:{ label: ctx => ` ${ctx.dataset.label}: ${fmtN(ctx.raw)} сом` } } },
+        responsive:true, maintainAspectRatio:true,
+        scales:{ y:{ ticks:{ callback: v => fmtN(v) } } }
+      }
+    });
+  }
+
+  // ── Count badge ────────────────────────────────────────────────────
+  const countEl = document.getElementById("incomeCount");
+  if(countEl) countEl.textContent = `Итого: ${fmtN(totalInc)} сом · ${filtered.length}${filtered.length!==incomes.length?" из "+incomes.length:""} записей`;
+
+  // ── Table ──────────────────────────────────────────────────────────
+  const sorted = [...filtered].sort((a,b)=>b.date.localeCompare(a.date));
+  const body = document.getElementById("incomeBody");
+  if(!body) return;
+  if(!filtered.length){
+    body.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:32px;color:#aaa;">
+      <div style="font-size:32px;margin-bottom:8px;">💰</div>
+      ${incomes.length ? "Нет записей по выбранным фильтрам." : "Нет записей о доходах. Добавьте первую запись выше."}</td></tr>`;
+    return;
+  }
+  body.innerHTML = sorted.map((e,i)=>{
+    const realIdx = incomes.indexOf(e);
+    const color = INCOME_CAT_COLORS[e.category]||"#546e7a";
+    const pctOfTotal = totalInc>0 ? ((e.amount/totalInc)*100).toFixed(1) : 0;
+    return `<tr>
+      <td style="color:#aaa;font-size:11px;">${i+1}</td>
+      <td style="white-space:nowrap;">${e.date}</td>
+      <td><span class="cat-badge" style="background:${color}22;color:${color};font-size:11px;">${e.category}</span></td>
+      <td style="color:#555;">${e.desc||'<span style="color:#ccc;">—</span>'}</td>
+      <td class="num" style="color:#2e7d32;font-weight:bold;">+${fmtN(e.amount)}</td>
+      <td class="num" style="color:#888;font-size:12px;">${e.amountUsd?'$'+e.amountUsd.toLocaleString("ru-RU",{maximumFractionDigits:0}):'—'}</td>
+      <td class="center" style="font-size:11px;color:#666;">${pctOfTotal}%
+        <div class="pbar-bg" style="margin-top:2px;"><div class="pbar" style="width:${Math.min(pctOfTotal,100)}%;background:${color};"></div></div>
+      </td>
+      <td class="edit-only center"><button class="del-btn" onclick="delIncome(${realIdx})" title="Удалить">🗑</button></td>
+    </tr>`;
+  }).join("")
+  + `<tr style="background:#f0fdf4;font-weight:bold;">
+    <td colspan="4" style="padding:10px 12px;color:#166534;">Итого</td>
+    <td class="num" style="color:#2e7d32;font-weight:bold;padding:10px 12px;">+${fmtN(totalInc)} сом</td>
+    <td class="num" style="color:#888;padding:10px 12px;">$${totalUsd.toLocaleString("ru-RU",{maximumFractionDigits:0})}</td>
+    <td></td><td></td>
+  </tr>`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════════════
+// Initialize
+document.addEventListener("DOMContentLoaded", async function init(){
+  checkUrlData(); // ← загружаем данные из ссылки если есть
+  // Populate year selector
+  const ys = document.getElementById("yearSelect");
+  if(ys){
+    AVAILABLE_YEARS.forEach(y=>{
+      const opt = document.createElement("option");
+      opt.value = y; opt.textContent = y + " год";
+      if(y === currentYear) opt.selected = true;
+      ys.appendChild(opt);
+    });
+  }
+  await loadFromGoogleSheets(currentYear);
+  checkSession(); // ← восстанавливаем сессию если вкладка не закрывалась
+  document.getElementById("fDate").value=new Date().toISOString().split("T")[0];
+  document.getElementById("iDate").value=new Date().toISOString().split("T")[0];
+  updateFormBlocks();
+  updateDirs();
+  updateMonths();
+  renderRef();
+  render();
+  renderIncome();
+});
+</script>
+</body>
+</html>
