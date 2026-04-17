@@ -800,7 +800,7 @@ const AVAILABLE_YEARS = [2026, 2027];
 let currentYear = 2026;
 
 function gsURL(sheetName){
-  return `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  return `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&t=${Date.now()}`;
 }
 
 // ── POST to Google Apps Script (no-cors, fire-and-forget) ──────────────
