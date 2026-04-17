@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Бюджет расходов 2026 — Компания 2</title>
+<title>Контроль Расходов Айдар</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -328,7 +328,7 @@ body.view-mode .edit-only { display:none !important; }
 <div id="loginOverlay">
   <div class="login-box">
     <div class="login-logo">📊</div>
-    <h2>Бюджет расходов 2026 — Компания 2</h2>
+    <h2>Контроль Расходов Айдар</h2>
     <p>Введите пароль для входа</p>
     <input type="password" id="loginPass" placeholder="Пароль"
       onkeydown="if(event.key==='Enter') doLogin()">
@@ -345,7 +345,7 @@ body.view-mode .edit-only { display:none !important; }
 <!-- ═══ HEADER ═══════════════════════════════════════════════════════ -->
 <div class="page-header">
   <div>
-    <div class="logo">📊 Бюджет расходов 2026 — Компания 2</div>
+    <div class="logo">📊 Контроль Расходов Айдар</div>
     <div class="subtitle">Валюта: Кыргызский сом (KGS) · Учёт · Контроль · Анализ</div>
   </div>
   <div class="hdr-btns">
@@ -818,7 +818,6 @@ const MONTH_KEYS = {
   "Июль":"m7","Август":"m8","Сентябрь":"m9","Октябрь":"m10","Ноябрь":"m11","Декабрь":"m12"
 };
 
-// Разбирает одну строку CSV с учётом кавычек (поля могут содержать запятые)
 function splitCSVLine(line){
   const result = [];
   let cur = "", inQ = false;
@@ -832,10 +831,8 @@ function splitCSVLine(line){
   return result.map(c=>c.trim());
 }
 
-// Парсит число: заменяет запятую-разделитель на точку (формат gviz)
 function parseNum(s){ return parseFloat(String(s||0).replace(",","."))||0; }
 
-// parseCSV с заголовками (для Справочник, листа года)
 function parseCSV(text){
   const lines = text.trim().split("\n");
   const headers = splitCSVLine(lines[0]);
@@ -850,13 +847,11 @@ function parseCSV(text){
   return data;
 }
 
-// parseCSV по позиции (для листов без заголовков: Расходы, Доходы)
 function parseCSVPositional(text, cols){
   const lines = text.trim().split("\n");
   if(!lines.length) return [];
   const data = [];
   let startIdx = 0;
-  // Если первая ячейка — не 13-значный timestamp → это заголовок, пропускаем
   const firstCell = splitCSVLine(lines[0])[0] || "";
   if(!/^\d{10,}$/.test(firstCell)) startIdx = 1;
   for(let i=startIdx; i<lines.length; i++){
@@ -887,8 +882,8 @@ function buildFromSheets(refRows, dataRows){
   const dataMap = {};
   dataRows.forEach(row=>{
     const key = `${row["Блок"]}::${row["Направление"]}`;
-    const d = { budget: parseNum(row["Бюджет"]) };
-    Object.entries(MONTH_KEYS).forEach(([label,mkey])=>{ d[mkey]=parseNum(row[label]); });
+    const d = { budget: parseFloat(row["Бюджет"])||0 };
+    Object.entries(MONTH_KEYS).forEach(([label,mkey])=>{ d[mkey]=parseFloat(row[label])||0; });
     dataMap[key] = d;
   });
 
@@ -933,14 +928,61 @@ async function loadFromGoogleSheets(year){
       color: b.color || "#4EA72A",
       dirs: b.dirs.map(d=>({...d}))
     }));
-    // Кэшируем свежие данные Справочника из Google Sheets в localStorage
-    localStorage.setItem("ref_blocks_2026", JSON.stringify(refBlocks));
-    // Инициализируем квартальные бюджеты из Google Sheets (годовой бюджет = дефолт для всех кварталов)
-    // Только если для квартала ещё не задан явный бюджет пользователем
+    currentYear = year;
+    document.getElementById("yearBadge").textContent = year;
+    console.log(`✅ Данные загружены: ${year}, ${merged.length} блоков`);
+
+    // Загружаем расходы из листа "Расходы"
+    const РАСХ_COLS = ['id','date','block','dir','quarter','month','monthName','amount','amountUsd','usdRate','rateDate','desc'];
+    if(расходыResp.ok){
+      try{
+        const расходыText = await расходыResp.text();
+        const расходыRows = parseCSVPositional(расходыText, РАСХ_COLS);
+        if(расходыRows.length){
+          const sheetExtras = расходыRows.filter(r => r.block).map(r => ({
+            id: r.id||"", date: r.date||"", block: r.block||"", dir: r.dir||"",
+            quarter: r.quarter||"Q1", month: r.month||"m1", monthName: r.monthName||"",
+            amount: parseNum(r.amount),
+            amountUsd: r.amountUsd ? parseNum(r.amountUsd) : null,
+            usdRate: r.usdRate ? parseNum(r.usdRate) : null,
+            rateDate: r.rateDate||"", desc: r.desc||""
+          }));
+          extras = [...sheetExtras];
+          saveExtras();
+          console.log(`✅ Расходы загружены из Sheets: ${extras.length} записей`);
+        }
+      } catch(re){ console.warn("⚠ Ошибка загрузки расходов:", re.message); }
+    }
+
+    // Загружаем доходы из листа "Доходы"
+    const ДОХ_COLS = ['id','date','category','desc','amount','amountUsd','usdRate','rateDate'];
+    if(доходыResp.ok){
+      try{
+        const txt = await доходыResp.text();
+        const rows = parseCSVPositional(txt, ДОХ_COLS);
+        if(rows.length){
+          const sheetInc = rows.filter(r=>r.date||r.category).map(r=>({
+            id: r.id||"",
+            date: r.date||"",
+            category: r.category||"Прочее",
+            desc: r.desc||"",
+            amount: parseNum(r.amount),
+            amountUsd: r.amountUsd ? parseNum(r.amountUsd) : null,
+            usdRate: r.usdRate ? parseNum(r.usdRate) : null,
+            rateDate: r.rateDate||""
+          }));
+          incomes = [...sheetInc];
+          saveIncomes();
+          console.log(`✅ Доходы загружены из Sheets: ${incomes.length} записей`);
+        }
+      } catch(re){ console.warn("⚠ Ошибка загрузки доходов:", re.message); }
+    }
+
+    // Инициализируем quarterly_budgets из refBlocks (если ключа ещё нет)
     refBlocks.forEach(b => b.dirs.forEach(d => {
       ["Q1","Q2","Q3","Q4"].forEach(q => {
         const qKey = `${year}::${q}::${b.block}::${d.name}`;
-        if(!(qKey in quarterlyBudgets)) {
+        if(!(qKey in quarterlyBudgets)){
           quarterlyBudgets[qKey] = d.budget;
         }
       });
@@ -974,85 +1016,6 @@ async function loadFromGoogleSheets(year){
       } catch(re){ console.warn("⚠ Ошибка загрузки бюджетов:", re.message); }
     }
     saveCustomBudgets();
-    currentYear = year;
-    document.getElementById("yearBadge").textContent = year;
-    console.log(`✅ Данные загружены: ${year}, ${merged.length} блоков`);
-
-    // ── Расходы: позиционный парсинг (нет строки заголовков) ──────────
-    // Колонки в листе Расходы: id, date, block, dir, quarter, month, monthName, amount, amountUsd, usdRate, rateDate, desc
-    const РАСХ_COLS = ['id','date','block','dir','quarter','month','monthName','amount','amountUsd','usdRate','rateDate','desc'];
-    if(расходыResp.ok){
-      try{
-        const расходыText = await расходыResp.text();
-        const расходыRows = parseCSVPositional(расходыText, РАСХ_COLS);
-        if(расходыRows.length){
-          const sheetExtras = расходыRows
-            .filter(r => r.block)
-            .map(r => ({
-              id:        r.id || "",
-              date:      r.date || "",
-              block:     r.block || "",
-              dir:       r.dir || "",
-              quarter:   r.quarter || "Q1",
-              month:     r.month || "m1",
-              monthName: r.monthName || "",
-              amount:    parseNum(r.amount),
-              amountUsd: r.amountUsd ? parseNum(r.amountUsd) : null,
-              usdRate:   r.usdRate   ? parseNum(r.usdRate)   : null,
-              rateDate:  r.rateDate  || "",
-              desc:      r.desc      || ""
-            }));
-          extras = [...sheetExtras];
-          saveExtras();
-          console.log(`✅ Расходы загружены из Sheets: ${sheetExtras.length} записей`);
-        } else {
-          // Лист "Расходы" пуст — одноразовая миграция: отправляем все локальные расходы
-          const toSync = extras.filter(ex => ex.block);
-          if(toSync.length > 0){
-            console.log(`📤 Миграция ${toSync.length} расходов в Google Sheets...`);
-            toSync.forEach(ex => {
-              postToSheets({action:"addExpense", data: JSON.stringify(ex)});
-            });
-            showToast(`Расходы синхронизируются с облаком (${toSync.length} записей)...`, "info", 4000);
-          }
-        }
-      } catch(re){ console.warn("⚠ Ошибка загрузки расходов:", re.message); }
-    }
-
-    // ── Доходы: позиционный парсинг (нет строки заголовков) ──────────
-    // Колонки в листе Доходы: id, date, category, desc, amount, amountUsd, usdRate, rateDate
-    const ДОХ_COLS = ['id','date','category','desc','amount','amountUsd','usdRate','rateDate'];
-    if(доходыResp.ok){
-      try{
-        const txt = await доходыResp.text();
-        const rows = parseCSVPositional(txt, ДОХ_COLS);
-        if(rows.length){
-          const sheetIncomes = rows.filter(r=>r.date||r.category).map(r=>({
-            id: r.id||"",
-            date: r.date||"",
-            category: r.category||"Прочее",
-            desc: r.desc||"",
-            amount: parseNum(r.amount),
-            amountUsd: r.amountUsd ? parseNum(r.amountUsd) : null,
-            usdRate: r.usdRate ? parseNum(r.usdRate) : null,
-            rateDate: r.rateDate||""
-          }));
-          incomes = [...sheetIncomes];
-          saveIncomes();
-          console.log(`✅ Доходы загружены из Sheets: ${sheetIncomes.length} записей`);
-        } else {
-          // Лист "Доходы" пуст — одноразовая миграция: отправляем все локальные доходы
-          const toSync = incomes.filter(inc => inc.date || inc.category);
-          if(toSync.length > 0){
-            console.log(`📤 Миграция ${toSync.length} доходов в Google Sheets...`);
-            toSync.forEach(inc => {
-              postToSheets({action:"addIncome", data: JSON.stringify(inc)});
-            });
-            showToast(`Доходы синхронизируются с облаком (${toSync.length} записей)...`, "info", 4000);
-          }
-        }
-      } catch(re){ console.warn("⚠ Ошибка загрузки доходов:", re.message); }
-    }
   } catch(e){
     console.warn("⚠ Не удалось загрузить Google Sheets:", e.message);
     // fallback: keep existing data
@@ -1066,7 +1029,7 @@ async function switchYear(year){
   if(year === currentYear) return;
   extras = [];
   hiddenBase.clear();
-  // НЕ сбрасываем customBudgets — они обновятся из Google Sheets после загрузки
+  // НЕ сбрасываем quarterlyBudgets — они обновятся из Google Sheets после загрузки
   await loadFromGoogleSheets(year);
   syncAll();
   renderRef();
@@ -1097,7 +1060,7 @@ const DEFAULT_COLORS = ["#4EA72A","#2471a3","#e67e22","#8e44ad","#c0392b","#16a0
 
 // Загружаем справочник блоков из localStorage (или исходные данные)
 function loadRefBlocks(){
-  const saved = localStorage.getItem("ref_blocks_2026");
+  const saved = localStorage.getItem("ref_blocks_c2_2026");
   if(saved) return JSON.parse(saved);
   // Первый запуск — берём из INITIAL_DATA
   return INITIAL_DATA.map((b,i)=>({
@@ -1107,7 +1070,7 @@ function loadRefBlocks(){
   }));
 }
 function saveRefBlocks(){
-  localStorage.setItem("ref_blocks_2026", JSON.stringify(refBlocks));
+  localStorage.setItem("ref_blocks_c2_2026", JSON.stringify(refBlocks));
   postToSheets({ action: "updateRef", data: JSON.stringify(refBlocks) });
 }
 
@@ -1152,12 +1115,12 @@ const INITIAL_DATA = [
 
 let refBlocks = loadRefBlocks(); // ← после INITIAL_DATA, теперь порядок правильный
 
-let extras = JSON.parse(localStorage.getItem("budget_extras_2026")||"[]");
-function saveExtras(){ localStorage.setItem("budget_extras_2026",JSON.stringify(extras)); }
+let extras = JSON.parse(localStorage.getItem("budget_extras_c2_2026")||"[]");
+function saveExtras(){ localStorage.setItem("budget_extras_c2_2026",JSON.stringify(extras)); }
 
 // ── ДОХОДЫ ──────────────────────────────────────────────────────────
-let incomes = JSON.parse(localStorage.getItem("budget_incomes_2026")||"[]");
-function saveIncomes(){ localStorage.setItem("budget_incomes_2026", JSON.stringify(incomes)); }
+let incomes = JSON.parse(localStorage.getItem("budget_incomes_c2_2026")||"[]");
+function saveIncomes(){ localStorage.setItem("budget_incomes_c2_2026", JSON.stringify(incomes)); }
 
 const INCOME_CATEGORIES = [
   "Продажи / Выручка","Услуги","Аренда","Инвестиции","Субсидии / Гранты","Прочее"
@@ -1172,27 +1135,23 @@ const INCOME_CAT_COLORS = {
 };
 
 // Скрытые базовые строки: Set ключей "Блок::Направление::m1"
-let hiddenBase = new Set(JSON.parse(localStorage.getItem("hidden_base_2026")||"[]"));
-function saveHiddenBase(){ localStorage.setItem("hidden_base_2026",JSON.stringify([...hiddenBase])); }
+let hiddenBase = new Set(JSON.parse(localStorage.getItem("hidden_base_c2_2026")||"[]"));
+function saveHiddenBase(){ localStorage.setItem("hidden_base_c2_2026",JSON.stringify([...hiddenBase])); }
 function hideBaseRow(key){ hiddenBase.add(key); saveHiddenBase(); syncAll(); }
 function restoreBase(){ hiddenBase.clear(); saveHiddenBase(); syncAll(); }
 
 // Бюджеты по кварталам и годам: ключ = "год::квартал::Блок::Направление"
-// Пример: "2026::Q2::Коммунальные услуги::Электричество" = 450000
-let quarterlyBudgets = JSON.parse(localStorage.getItem("quarterly_budgets")||"{}");
+let quarterlyBudgets = JSON.parse(localStorage.getItem("quarterly_budgets_c2")||"{}");
 // Сбрасываем старый формат (budget_custom_2026) — у него не было кварталов
 if(localStorage.getItem("budget_custom_2026")){ localStorage.removeItem("budget_custom_2026"); }
-function saveCustomBudgets(){ localStorage.setItem("quarterly_budgets",JSON.stringify(quarterlyBudgets)); }
-
+function saveCustomBudgets(){ localStorage.setItem("quarterly_budgets_c2",JSON.stringify(quarterlyBudgets)); }
 function _currentQ(){ return document.getElementById("selQuarter")?.value || "Q1"; }
-
-function getBudget(block, name){
+function getBudget(block,name){
   const key = `${currentYear}::${_currentQ()}::${block}::${name}`;
   if(key in quarterlyBudgets) return quarterlyBudgets[key];
-  // Фоллбэк: refBlocks (годовой бюджет из Google Sheets)
   return refBlocks.find(b=>b.block===block)?.dirs.find(d=>d.name===name)?.budget ?? 0;
 }
-function setBudget(block, name, val){
+function setBudget(block,name,val){
   const q = _currentQ();
   const key = `${currentYear}::${q}::${block}::${name}`;
   quarterlyBudgets[key] = val;
@@ -1273,7 +1232,6 @@ function getVal(dir,key){
   const baseKey = `${dir._block}::${dir.name}::${key}`;
   let v = hiddenBase.has(baseKey) ? 0 : (dir[key]||0);
   const yearStr = String(currentYear);
-  // Только расходы выбранного года
   extras.forEach(e=>{
     if(e.block===dir._block && e.dir===dir.name && e.month===key &&
        (!e.date || e.date.startsWith(yearStr))) v+=e.amount;
@@ -1316,17 +1274,29 @@ function renderCards(data){
   const totalB = data.reduce((s,b)=>s+b.dirs.reduce((ss,d)=>ss+d.budget,0),0);
   const totalF = data.reduce((s,b)=>s+b.dirs.reduce((ss,d)=>ss+getVal(d,qk[0])+getVal(d,qk[1])+getVal(d,qk[2]),0),0);
   const rem=totalB-totalF, p=pct(totalF,totalB);
-  const totalIncome = filterIncByQ(incomes, q).reduce((s,e)=>s+e.amount,0);
+  const filteredInc = filterIncByQ(incomes, q);
+  const totalIncome = filteredInc.reduce((s,e)=>s+e.amount,0);
+  const totalIncUsd = filteredInc.reduce((s,e)=>s+(e.amountUsd||0),0);
   const netProfit = totalIncome - totalF;
+  // USD для расходов: берём из extras по кварталу
+  const filteredExp = extras.filter(e => {
+    if(q==="all") return !e.date || e.date.startsWith(String(currentYear));
+    return e.quarter === q && (!e.date || e.date.startsWith(String(currentYear)));
+  });
+  const totalExpUsd = filteredExp.reduce((s,e)=>s+(e.amountUsd||0),0);
+  const totalNetUsd = totalIncUsd - totalExpUsd;
+  const incCount = filteredInc.length;
+  const expCount = filteredExp.length;
   document.getElementById("cards").innerHTML=`
     <div class="card purple">
       <div class="card-label">💹 Доходы (всего)</div>
       <div class="card-value">${fmtN(totalIncome)} сом</div>
+      ${totalIncUsd>0?`<div class="card-sub">≈ $${totalIncUsd.toLocaleString("ru-RU",{maximumFractionDigits:0})} · ${incCount} ${incCount===1?"запись":incCount<5?"записи":"записей"}</div>`:''}
     </div>
     <div class="card ${netProfit>=0?'':'red'}">
       <div class="card-label">📈 Чистая прибыль</div>
       <div class="card-value ${netProfit>=0?'profit-positive':'profit-negative'}">${netProfit>=0?'+':''}${fmtN(netProfit)} сом</div>
-      <div class="card-sub">${netProfit>=0?'Прибыль 🟢':'Убыток 🔴'}</div>
+      <div class="card-sub">${netProfit>=0?'Прибыль 🟢':'Убыток 🔴'}${totalNetUsd!==0?` · ≈ ${totalNetUsd>=0?'+':''}$${Math.abs(totalNetUsd).toLocaleString("ru-RU",{maximumFractionDigits:0})}`:''}</div>
     </div>
     <div class="card blue">
       <div class="card-label">Бюджет на квартал (${Q_LABELS[q]})</div>
@@ -1335,7 +1305,7 @@ function renderCards(data){
     <div class="card">
       <div class="card-label">Фактические расходы</div>
       <div class="card-value">${fmtN(totalF)} сом</div>
-      <div class="card-sub">Из бюджета: ${p}%</div>
+      <div class="card-sub">Из бюджета: ${p}%${totalExpUsd>0?` · ≈ $${totalExpUsd.toLocaleString("ru-RU",{maximumFractionDigits:0})}`:''}${expCount>0?` · ${expCount} ${expCount===1?"запись":expCount<5?"записи":"записей"}`:''}</div>
     </div>
     <div class="card ${rem<0?'red':'orange'}">
       <div class="card-label">Остаток бюджета</div>
@@ -1455,12 +1425,12 @@ async function addEntry(){
   const amountUsd = usdRate ? parseFloat((amount * usdRate).toFixed(2)) : null;
   const id        = Date.now().toString();
 
-  // ── Автоматически добавляем новое Направление в Справочник ──────────
-  autoAddDirToRef(block, dir);
-
   const newEntry = {id,block,dir,quarter,month,monthName,date,desc,amount,amountUsd,usdRate,rateDate};
   extras.push(newEntry);
   saveExtras();
+
+  // Автоматически добавить направление в Справочник если его там нет
+  autoAddDirToRef(block, dir);
 
   // Sync to Google Sheets (Apps Script expects data as JSON string)
   postToSheets({
@@ -1476,48 +1446,35 @@ async function addEntry(){
   showToast(`Расход добавлен: ${dir} — ${amount.toLocaleString()} сом`, "success");
 }
 
+function autoAddDirToRef(block, dir){
+  if(!block || !dir) return;
+  let blkObj = refBlocks.find(b => b.block === block);
+  if(!blkObj){
+    const colors = ["#4EA72A","#2471a3","#e67e22","#8e44ad","#c0392b","#16a085","#d35400"];
+    blkObj = { block, color: colors[refBlocks.length % colors.length], dirs: [] };
+    refBlocks.push(blkObj);
+  }
+  const exists = blkObj.dirs.some(d => d.name === dir);
+  if(exists) return;
+  blkObj.dirs.push({
+    name: dir, budget: 0,
+    m1:0, m2:0, m3:0, m4:0, m5:0, m6:0,
+    m7:0, m8:0, m9:0, m10:0, m11:0, m12:0
+  });
+  saveRefBlocks();
+  updateDirs();
+  if(typeof updateFormBlocks === "function") updateFormBlocks();
+  renderRef();
+  syncAll();
+  showToast(`✅ «${dir}» добавлено в Справочник → ${block}`, "success", 3000);
+}
+
 function updateDirs(){
   const block=document.getElementById("fBlock").value;
   const found=refBlocks.find(b=>b.block===block);
   const dl=document.getElementById("dirList");
   dl.innerHTML=(found?.dirs||[]).map(d=>`<option value="${d.name}">`).join("");
   document.getElementById("fDir").value="";
-}
-
-// Автоматически добавляет новое Направление в Справочник если его ещё нет
-function autoAddDirToRef(block, dir){
-  if(!block || !dir) return;
-  let blkObj = refBlocks.find(b => b.block === block);
-
-  // Если блок не существует — создаём его
-  if(!blkObj){
-    const colors = ["#4EA72A","#2471a3","#e67e22","#8e44ad","#c0392b","#16a085","#d35400"];
-    blkObj = { block, color: colors[refBlocks.length % colors.length], dirs: [] };
-    refBlocks.push(blkObj);
-  }
-
-  // Если направление уже есть — ничего не делаем
-  const exists = blkObj.dirs.some(d => d.name === dir);
-  if(exists) return;
-
-  // Добавляем новое направление с нулевыми значениями
-  blkObj.dirs.push({
-    name: dir, budget: 0,
-    m1:0, m2:0, m3:0, m4:0, m5:0, m6:0,
-    m7:0, m8:0, m9:0, m10:0, m11:0, m12:0
-  });
-
-  // Сохраняем в localStorage + синхронизируем с Google Sheets через updateRef
-  // (Apps Script: clearContents → header → appendRow для каждого блока/направления)
-  saveRefBlocks();
-
-  // Обновляем datalist и все выпадающие списки
-  updateDirs();
-  if(typeof updateFormBlocks === "function") updateFormBlocks();
-  renderRef();
-  syncAll();
-
-  showToast(`✅ «${dir}» добавлено в Справочник → ${block}`, "success", 3000);
 }
 
 function updateMonths(){
@@ -1567,7 +1524,7 @@ function getAllData(){
     date: new Date().toISOString(),
     refBlocks,
     extras,
-    quarterlyBudgets,
+    customBudgets,
     hiddenBase: [...hiddenBase],
   };
 }
@@ -1594,7 +1551,7 @@ function importData(event){
       saveRefBlocks();
       extras = data.extras || [];
       saveExtras();
-      quarterlyBudgets = data.quarterlyBudgets || data.customBudgets || {};
+      customBudgets = data.customBudgets || {};
       saveCustomBudgets();
       hiddenBase = new Set(data.hiddenBase || []);
       saveHiddenBase();
@@ -1842,14 +1799,10 @@ function renderSvod(){
 function resetBudgets(){
   const q = _currentQ();
   if(!confirm(`Сбросить бюджеты ${q} ${currentYear} к значениям из Google Sheets?`)) return;
-  // Удаляем только бюджеты текущего года и квартала
+  // Удаляем только ключи текущего года и квартала
   Object.keys(quarterlyBudgets).forEach(k => {
     if(k.startsWith(`${currentYear}::${q}::`)) delete quarterlyBudgets[k];
   });
-  // Восстанавливаем из refBlocks (данные Google Sheets)
-  refBlocks.forEach(b => b.dirs.forEach(d => {
-    quarterlyBudgets[`${currentYear}::${q}::${b.block}::${d.name}`] = d.budget;
-  }));
   saveCustomBudgets();
   render();
 }
@@ -2088,13 +2041,11 @@ function getIncomeQuarter(dateStr){
   return "Q4";
 }
 
-// Отфильтровать массив доходов по кварталу И году (пустая строка = все кварталы)
+// Отфильтровать массив доходов по кварталу (пустая строка = все)
 function filterIncByQ(arr, q){
   const yearStr = String(currentYear);
   return arr.filter(e => {
-    // Фильтр по году
     if(e.date && !e.date.startsWith(yearStr)) return false;
-    // Фильтр по кварталу
     if(q && getIncomeQuarter(e.date) !== q) return false;
     return true;
   });
