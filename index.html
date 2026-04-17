@@ -2336,6 +2336,14 @@ document.addEventListener("DOMContentLoaded", async function init(){
   renderRef();
   render();
   renderIncome();
+
+  // Автообновление данных каждые 2 минуты (синхронизация удалений и бюджетов)
+  setInterval(async () => {
+    await loadFromGoogleSheets(currentYear);
+    syncAll();
+    renderRef();
+    renderIncome();
+  }, 2 * 60 * 1000);
 });
 </script>
 </body>
