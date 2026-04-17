@@ -1005,6 +1005,16 @@ async function loadFromGoogleSheets(year){
           extras = [...sheetExtras];
           saveExtras();
           console.log(`✅ Расходы загружены из Sheets: ${sheetExtras.length} записей`);
+        } else {
+          // Лист "Расходы" пуст — одноразовая миграция: отправляем все локальные расходы
+          const toSync = extras.filter(ex => ex.block);
+          if(toSync.length > 0){
+            console.log(`📤 Миграция ${toSync.length} расходов в Google Sheets...`);
+            toSync.forEach(ex => {
+              postToSheets({action:"addExpense", data: JSON.stringify(ex)});
+            });
+            showToast(`Расходы синхронизируются с облаком (${toSync.length} записей)...`, "info", 4000);
+          }
         }
       } catch(re){ console.warn("⚠ Ошибка загрузки расходов:", re.message); }
     }
@@ -1030,6 +1040,16 @@ async function loadFromGoogleSheets(year){
           incomes = [...sheetIncomes];
           saveIncomes();
           console.log(`✅ Доходы загружены из Sheets: ${sheetIncomes.length} записей`);
+        } else {
+          // Лист "Доходы" пуст — одноразовая миграция: отправляем все локальные доходы
+          const toSync = incomes.filter(inc => inc.date || inc.category);
+          if(toSync.length > 0){
+            console.log(`📤 Миграция ${toSync.length} доходов в Google Sheets...`);
+            toSync.forEach(inc => {
+              postToSheets({action:"addIncome", data: JSON.stringify(inc)});
+            });
+            showToast(`Доходы синхронизируются с облаком (${toSync.length} записей)...`, "info", 4000);
+          }
         }
       } catch(re){ console.warn("⚠ Ошибка загрузки доходов:", re.message); }
     }
