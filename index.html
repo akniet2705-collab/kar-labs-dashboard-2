@@ -369,7 +369,7 @@ body.view-mode .edit-only { display:none !important; }
   <button class="tab-btn active" onclick="switchTab('budget',this)">📊 Бюджет</button>
   <button class="tab-btn"        onclick="switchTab('svod',this)">📋 Сводка</button>
   <button class="tab-btn"        onclick="switchTab('ref',this)">📂 Справочник</button>
-  <button class="tab-btn" onclick="switchTab('income',this)">💰 Доходы</button>
+  <button class="tab-btn" onclick="switchTab('income',this)">💰 Приходы</button>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════
@@ -626,7 +626,7 @@ body.view-mode .edit-only { display:none !important; }
     <!-- Net Profit Banner -->
     <div class="net-profit-card" id="netProfitBanner">
       <div>
-        <div class="npc-label">💹 Чистая прибыль (Доходы − Расходы)</div>
+        <div class="npc-label">💹 Чистая прибыль (Приходы − Расходы)</div>
         <div class="npc-value" id="netProfitValue">0 сом</div>
         <div class="npc-sub" id="netProfitSub">Загрузка данных...</div>
       </div>
@@ -636,18 +636,18 @@ body.view-mode .edit-only { display:none !important; }
     <!-- Charts row -->
     <div class="charts-row" style="margin-bottom:16px;">
       <div class="chart-box">
-        <h3>🥧 Доходы по категориям</h3>
+        <h3>🥧 Приходы по категориям</h3>
         <canvas id="incomePieChart" style="max-height:220px;"></canvas>
       </div>
       <div class="chart-box">
-        <h3>📊 Доходы vs Расходы по месяцам</h3>
+        <h3>📊 Приходы vs Расходы по месяцам</h3>
         <canvas id="incomeBarChart" style="max-height:220px;"></canvas>
       </div>
     </div>
 
     <!-- Add income form -->
     <div class="section edit-only" style="margin-bottom:16px;">
-      <div class="section-head">💰 Добавить доход</div>
+      <div class="section-head">💰 Добавить приход</div>
       <div class="section-body">
         <div class="form-row">
           <div class="form-group">
@@ -676,7 +676,7 @@ body.view-mode .edit-only { display:none !important; }
           </div>
           <div class="form-group">
             <label>&nbsp;</label>
-            <button class="btn" style="background:linear-gradient(135deg,#667eea,#764ba2);" onclick="addIncome()">✔ Добавить доход</button>
+            <button class="btn" style="background:linear-gradient(135deg,#667eea,#764ba2);" onclick="addIncome()">✔ Добавить приход</button>
           </div>
         </div>
         <div style="font-size:12px;color:#888;margin-top:4px;">
@@ -688,7 +688,7 @@ body.view-mode .edit-only { display:none !important; }
     <!-- Income table -->
     <div class="section">
       <div class="section-head">
-        <span>📋 Все доходы</span>
+        <span>📋 Все приходы</span>
         <span id="incomeCount" style="font-size:11px;opacity:.8;"></span>
       </div>
       <div style="overflow-x:auto; max-height:520px; overflow-y:auto;">
@@ -1289,7 +1289,7 @@ function renderCards(data){
   const expCount = filteredExp.length;
   document.getElementById("cards").innerHTML=`
     <div class="card purple">
-      <div class="card-label">💹 Доходы (всего)</div>
+      <div class="card-label">💹 Приходы (всего)</div>
       <div class="card-value">${fmtN(totalIncome)} сом</div>
       ${totalIncUsd>0?`<div class="card-sub">≈ $${totalIncUsd.toLocaleString("ru-RU",{maximumFractionDigits:0})} · ${incCount} ${incCount===1?"запись":incCount<5?"записи":"записей"}</div>`:''}
     </div>
@@ -2083,7 +2083,7 @@ async function addIncome(){
   const btn = document.querySelector("button[onclick='addIncome()']");
   btn.textContent="⏳..."; btn.disabled=true;
   const res = await fetchRate(date);
-  btn.textContent="✔ Добавить доход"; btn.disabled=false;
+  btn.textContent="✔ Добавить приход"; btn.disabled=false;
 
   const usdRate   = res?.rate || null;
   const rateDate  = res?.actualDate || date;
@@ -2105,12 +2105,12 @@ async function addIncome(){
   document.getElementById("iRateHint").textContent="—";
   renderIncome();
   renderCards(buildData()); // update net profit card
-  showToast(`Доход добавлен: ${category} — ${amount.toLocaleString()} сом`, "success");
+  showToast(`Приход добавлен: ${category} — ${amount.toLocaleString()} сом`, "success");
 }
 
 function delIncome(i){
   if(currentRole !== "editor"){ showToast("Нет прав", "error"); return; }
-  if(!confirm("Удалить эту запись о доходе?")) return;
+  if(!confirm("Удалить эту запись о приходе?")) return;
   const entry = incomes[i];
   incomes.splice(i,1);
   saveIncomes();
@@ -2150,7 +2150,7 @@ function renderIncome(){
   const statsEl = document.getElementById("incomeStats");
   if(statsEl) statsEl.innerHTML = `
     <div class="income-stat blue">
-      <div class="stat-label">💰 Доходы (${periodLabel})</div>
+      <div class="stat-label">💰 Приходы (${periodLabel})</div>
       <div class="stat-value">${fmtN(totalInc)} <span style="font-size:14px;font-weight:400">сом</span></div>
       <div class="stat-sub">≈ $${totalUsd.toLocaleString("ru-RU",{maximumFractionDigits:0})} · ${filtered.length} из ${incomes.length} записей</div>
     </div>
@@ -2177,8 +2177,8 @@ function renderIncome(){
       : "linear-gradient(135deg,#b71c1c 0%,#c62828 50%,#e53935 100%)";
     if(npVal) npVal.textContent = (netProfit>=0?"+":"") + fmtN(netProfit) + " сом";
     if(npSub) npSub.textContent = netProfit>=0
-      ? `Доходы превышают расходы на ${fmtN(netProfit)} сом`
-      : `Расходы превышают доходы на ${fmtN(Math.abs(netProfit))} сом`;
+      ? `Приходы превышают расходы на ${fmtN(netProfit)} сом`
+      : `Расходы превышают приходы на ${fmtN(Math.abs(netProfit))} сом`;
     if(npIcon) npIcon.textContent = netProfit>=0 ? "📈" : "📉";
   }
 
@@ -2229,7 +2229,7 @@ function renderIncome(){
       data:{
         labels: chartMonthLabels,
         datasets:[
-          { label:"Доходы",  data:incByMonth, backgroundColor:"rgba(46,125,50,.75)",  borderColor:"#2e7d32", borderWidth:1 },
+          { label:"Приходы",  data:incByMonth, backgroundColor:"rgba(46,125,50,.75)",  borderColor:"#2e7d32", borderWidth:1 },
           { label:"Расходы", data:expByMonth, backgroundColor:"rgba(198,40,40,.65)",  borderColor:"#c62828", borderWidth:1 },
         ]
       },
@@ -2253,7 +2253,7 @@ function renderIncome(){
   if(!filtered.length){
     body.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:32px;color:#aaa;">
       <div style="font-size:32px;margin-bottom:8px;">💰</div>
-      ${incomes.length ? "Нет записей по выбранным фильтрам." : "Нет записей о доходах. Добавьте первую запись выше."}</td></tr>`;
+      ${incomes.length ? "Нет записей по выбранным фильтрам." : "Нет записей о приходах. Добавьте первую запись выше."}</td></tr>`;
     return;
   }
   body.innerHTML = sorted.map((e,i)=>{
