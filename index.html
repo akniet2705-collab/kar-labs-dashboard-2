@@ -297,6 +297,32 @@ body.view-mode .edit-only { display:none !important; }
 }
 .role-badge.viewer { background:rgba(255,255,255,.15); color:#fff; }
 .role-badge.editor { background:rgba(255,255,255,.25); color:#fff; }
+
+/* ── MONTHLY TAB ── */
+.mt { width:100%; border-collapse:collapse; font-size:13px; }
+.mt thead th { background:#375623; color:#fff; padding:11px 16px; text-align:right; font-size:11px; font-weight:bold; border:1px solid #4EA72A; white-space:nowrap; letter-spacing:.3px; text-transform:uppercase; }
+.mt thead th:first-child { text-align:left; border-radius:0; }
+.mt tbody td { padding:10px 16px; border:1px solid #eee; text-align:right; font-size:13px; color:#333; }
+.mt tbody td:first-child { text-align:left; font-weight:600; color:#375623; }
+.mt tbody tr:hover td { background:#f5fdf0; }
+.mt .m-pos { color:#166534; font-weight:700; }
+.mt .m-neg { color:#c0392b; font-weight:700; }
+.mt .m-cum-pos { color:#1e40af; font-weight:700; }
+.mt .m-cum-neg { color:#c0392b; font-weight:700; }
+.mt .m-cur td { background:#f0fae8 !important; }
+.mt .m-future td { color:#ccc !important; font-weight:400 !important; }
+.mt .m-future td:first-child { color:#bbb !important; }
+.mt tfoot td { background:#375623 !important; color:#fff !important; font-weight:bold; font-size:13px; padding:11px 16px; text-align:right; border:1px solid #4EA72A; }
+.mt tfoot td:first-child { text-align:left; }
+.card-sub-prev { font-size:11px; color:#aaa; margin-top:3px; font-style:italic; }
+.monthly-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px; }
+.ms-card { background:#fff; border-radius:10px; padding:16px 18px; box-shadow:0 2px 8px rgba(0,0,0,.08); border-left:4px solid #4EA72A; }
+.ms-card.blue { border-color:#2471a3; }
+.ms-card.red  { border-color:#c0392b; }
+.ms-card.purple { border-color:#8e44ad; }
+.ms-label { font-size:11px; color:#888; margin-bottom:5px; text-transform:uppercase; letter-spacing:.4px; }
+.ms-value { font-size:22px; font-weight:900; color:#222; }
+.ms-sub   { font-size:11px; color:#aaa; margin-top:3px; }
 </style>
 <style>
 #gsLoading { position:fixed; inset:0; background:rgba(255,255,255,.92); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:16px; color:#375623; }
@@ -370,6 +396,7 @@ body.view-mode .edit-only { display:none !important; }
   <button class="tab-btn"        onclick="switchTab('svod',this)">📋 Сводка</button>
   <button class="tab-btn"        onclick="switchTab('ref',this)">📂 Справочник</button>
   <button class="tab-btn" onclick="switchTab('income',this)">💰 Приходы</button>
+  <button class="tab-btn" onclick="switchTab('monthly',this)">📅 По месяцам</button>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════
@@ -713,6 +740,36 @@ body.view-mode .edit-only { display:none !important; }
   </div>
 </div><!-- /tab-income -->
 
+<!-- ════════════════════════════════════════════════════════════════════
+     ТАБ 5: ПО МЕСЯЦАМ
+     ════════════════════════════════════════════════════════════════ -->
+<div id="tab-monthly" class="tab-content">
+  <div class="container" style="padding-top:16px;">
+    <div class="monthly-summary" id="monthlySummaryCards"></div>
+    <div class="section">
+      <div class="section-head" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>📅 Финансовый отчёт по месяцам</span>
+        <span id="monthlyYearLabel" style="font-size:12px;opacity:.8;"></span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="mt" id="monthlyTable">
+          <thead>
+            <tr>
+              <th>Месяц</th>
+              <th>💰 Приходы</th>
+              <th>📤 Расходы</th>
+              <th>📈 Чистая прибыль</th>
+              <th>💼 Накоплено</th>
+            </tr>
+          </thead>
+          <tbody id="monthlyBody"></tbody>
+          <tfoot id="monthlyFoot"></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div><!-- /tab-monthly -->
+
 <footer>Бюджет расходов · Данные из Google Sheets · При добавлении нового года — добавь лист в таблицу и год в AVAILABLE_YEARS</footer>
 
 <script>
@@ -1053,6 +1110,20 @@ const QUARTERS = {
   Q4:{ labels:["Октябрь","Ноябрь","Декабрь"],     keys:["m10","m11","m12"] },
 };
 const Q_LABELS = { Q1:"I квартал", Q2:"II квартал", Q3:"III квартал", Q4:"IV квартал" };
+const ALL_MONTHS = [
+  {label:"Январь",  key:"m1",  num:"01"},
+  {label:"Февраль", key:"m2",  num:"02"},
+  {label:"Март",    key:"m3",  num:"03"},
+  {label:"Апрель",  key:"m4",  num:"04"},
+  {label:"Май",     key:"m5",  num:"05"},
+  {label:"Июнь",    key:"m6",  num:"06"},
+  {label:"Июль",    key:"m7",  num:"07"},
+  {label:"Август",  key:"m8",  num:"08"},
+  {label:"Сентябрь",key:"m9",  num:"09"},
+  {label:"Октябрь", key:"m10", num:"10"},
+  {label:"Ноябрь",  key:"m11", num:"11"},
+  {label:"Декабрь", key:"m12", num:"12"},
+];
 const MONTH_TO_Q = {};
 Object.entries(QUARTERS).forEach(([q,v])=> v.labels.forEach(m=> MONTH_TO_Q[m]=q));
 
@@ -1261,6 +1332,83 @@ function switchTab(id,btn){
   renderSvod();
   if(id==="ref") renderRef();
   if(id==="income") renderIncome();
+  if(id==="monthly") renderMonthly();
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  ТАБ 5 — ПО МЕСЯЦАМ
+// ════════════════════════════════════════════════════════════════════
+function renderMonthly(){
+  const yearStr = String(currentYear);
+  const todayMonth = new Date().getMonth() + 1;
+
+  let cumulative = 0;
+  let totalInc = 0, totalExp = 0;
+
+  const rows = ALL_MONTHS.map((m, i) => {
+    const monthNum = i + 1;
+    const datePrefix = `${yearStr}-${m.num}`;
+
+    const monthInc = incomes
+      .filter(e => e.date && e.date.startsWith(datePrefix))
+      .reduce((s, e) => s + e.amount, 0);
+
+    const monthExp = extras
+      .filter(e => e.date && e.date.startsWith(datePrefix))
+      .reduce((s, e) => s + e.amount, 0);
+
+    const monthProfit = monthInc - monthExp;
+    const isFuture = monthNum > todayMonth;
+
+    if(!isFuture){ cumulative += monthProfit; totalInc += monthInc; totalExp += monthExp; }
+
+    return { m, monthNum, monthInc, monthExp, monthProfit, cumulative, isFuture,
+             isCurrent: monthNum === todayMonth };
+  });
+
+  const totalProfit = totalInc - totalExp;
+
+  const sc = document.getElementById("monthlySummaryCards");
+  if(sc) sc.innerHTML = `
+    <div class="ms-card purple">
+      <div class="ms-label">💰 Приходы за год</div>
+      <div class="ms-value">${fmtN(totalInc)} сом</div>
+      <div class="ms-sub">за ${todayMonth} ${todayMonth===1?"месяц":todayMonth<5?"месяца":"месяцев"}</div>
+    </div>
+    <div class="ms-card red">
+      <div class="ms-label">📤 Расходы за год</div>
+      <div class="ms-value">${fmtN(totalExp)} сом</div>
+    </div>
+    <div class="ms-card ${totalProfit>=0?'':'red'}">
+      <div class="ms-label">📈 Чистая прибыль (накоплено)</div>
+      <div class="ms-value" style="color:${totalProfit>=0?'#166534':'#c0392b'}">${totalProfit>=0?'+':''}${fmtN(totalProfit)} сом</div>
+      <div class="ms-sub">нарастающий итог</div>
+    </div>`;
+
+  const yl = document.getElementById("monthlyYearLabel");
+  if(yl) yl.textContent = currentYear + " год";
+
+  const tbody = document.getElementById("monthlyBody");
+  if(tbody) tbody.innerHTML = rows.map(r => {
+    const hasData = r.monthInc > 0 || r.monthExp > 0;
+    const dash = '<span style="color:#ddd">—</span>';
+    return `<tr class="${r.isCurrent?'m-cur':r.isFuture?'m-future':''}">
+      <td>${r.m.label}${r.isCurrent?' <span style="font-size:10px;background:#4EA72A;color:#fff;border-radius:10px;padding:1px 6px;font-weight:600;">сейчас</span>':''}</td>
+      <td>${r.monthInc>0?fmtN(r.monthInc)+' сом':dash}</td>
+      <td>${r.monthExp>0?fmtN(r.monthExp)+' сом':dash}</td>
+      <td class="${!hasData?'':r.monthProfit>=0?'m-pos':'m-neg'}">${!hasData?dash:(r.monthProfit>=0?'+':'')+fmtN(r.monthProfit)+' сом'}</td>
+      <td class="${r.isFuture?'':r.cumulative>=0?'m-cum-pos':'m-cum-neg'}">${r.isFuture?dash:(r.cumulative>=0?'+':'')+fmtN(r.cumulative)+' сом'}</td>
+    </tr>`;
+  }).join('');
+
+  const tfoot = document.getElementById("monthlyFoot");
+  if(tfoot) tfoot.innerHTML = `<tr>
+    <td>ИТОГО ${currentYear}</td>
+    <td>${fmtN(totalInc)} сом</td>
+    <td>${fmtN(totalExp)} сом</td>
+    <td>${totalProfit>=0?'+':''}${fmtN(totalProfit)} сом</td>
+    <td>${totalProfit>=0?'+':''}${fmtN(totalProfit)} сом</td>
+  </tr>`;
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -1287,16 +1435,34 @@ function renderCards(data){
   const totalNetUsd = totalIncUsd - totalExpUsd;
   const incCount = filteredInc.length;
   const expCount = filteredExp.length;
+
+  // ── YTD: нарастающий итог за год ──
+  const yearStr = String(currentYear);
+  const ytdInc = incomes.filter(e=>e.date&&e.date.startsWith(yearStr)).reduce((s,e)=>s+e.amount,0);
+  const ytdExp = extras.filter(e=>e.date&&e.date.startsWith(yearStr)).reduce((s,e)=>s+e.amount,0);
+  const ytdProfit = ytdInc - ytdExp;
+
+  // ── Предыдущий месяц ──
+  const _now = new Date();
+  const _prevM = new Date(_now.getFullYear(), _now.getMonth()-1, 1);
+  const _prevPrefix = `${_prevM.getFullYear()}-${String(_prevM.getMonth()+1).padStart(2,'0')}`;
+  const prevMonthInc    = incomes.filter(e=>e.date&&e.date.startsWith(_prevPrefix)).reduce((s,e)=>s+e.amount,0);
+  const prevMonthExp    = extras.filter(e=>e.date&&e.date.startsWith(_prevPrefix)).reduce((s,e)=>s+e.amount,0);
+  const prevMonthProfit = prevMonthInc - prevMonthExp;
+  const prevMonthName   = _prevM.toLocaleString('ru-RU',{month:'long'});
+
   document.getElementById("cards").innerHTML=`
     <div class="card purple">
       <div class="card-label">💹 Приходы (всего)</div>
       <div class="card-value">${fmtN(totalIncome)} сом</div>
       ${totalIncUsd>0?`<div class="card-sub">≈ $${totalIncUsd.toLocaleString("ru-RU",{maximumFractionDigits:0})} · ${incCount} ${incCount===1?"запись":incCount<5?"записи":"записей"}</div>`:''}
+      ${prevMonthInc>0?`<div class="card-sub-prev">из них за ${prevMonthName}: ${fmtN(prevMonthInc)} сом</div>`:''}
     </div>
-    <div class="card ${netProfit>=0?'':'red'}">
-      <div class="card-label">📈 Чистая прибыль</div>
-      <div class="card-value ${netProfit>=0?'profit-positive':'profit-negative'}">${netProfit>=0?'+':''}${fmtN(netProfit)} сом</div>
-      <div class="card-sub">${netProfit>=0?'Прибыль 🟢':'Убыток 🔴'}${totalNetUsd!==0?` · ≈ ${totalNetUsd>=0?'+':''}$${Math.abs(totalNetUsd).toLocaleString("ru-RU",{maximumFractionDigits:0})}`:''}</div>
+    <div class="card ${ytdProfit>=0?'':'red'}">
+      <div class="card-label">📈 Чистая прибыль (накопл.)</div>
+      <div class="card-value ${ytdProfit>=0?'profit-positive':'profit-negative'}">${ytdProfit>=0?'+':''}${fmtN(ytdProfit)} сом</div>
+      <div class="card-sub">${ytdProfit>=0?'Прибыль 🟢':'Убыток 🔴'} · нарастающий итог</div>
+      <div class="card-sub-prev">за ${prevMonthName}: ${prevMonthProfit>=0?'+':''}${fmtN(prevMonthProfit)} сом</div>
     </div>
     <div class="card blue">
       <div class="card-label">Бюджет на квартал (${Q_LABELS[q]})</div>
@@ -1306,6 +1472,7 @@ function renderCards(data){
       <div class="card-label">Фактические расходы</div>
       <div class="card-value">${fmtN(totalF)} сом</div>
       <div class="card-sub">Из бюджета: ${p}%${totalExpUsd>0?` · ≈ $${totalExpUsd.toLocaleString("ru-RU",{maximumFractionDigits:0})}`:''}${expCount>0?` · ${expCount} ${expCount===1?"запись":expCount<5?"записи":"записей"}`:''}</div>
+      ${prevMonthExp>0?`<div class="card-sub-prev">за ${prevMonthName}: ${fmtN(prevMonthExp)} сом</div>`:''}
     </div>
     <div class="card ${rem<0?'red':'orange'}">
       <div class="card-label">Остаток бюджета</div>
