@@ -1342,46 +1342,55 @@ function renderMonthly(){
   const yearStr = String(currentYear);
   const todayMonth = new Date().getMonth() + 1;
 
-  let cumulative = 0;
-  let totalInc = 0, totalExp = 0;
+  let cumulative = 0, cumulativeUsd = 0;
+  let totalInc = 0, totalExp = 0, totalIncUsd = 0, totalExpUsd = 0;
+
+  const fmtUsd = v => v !== 0 ? `<div style="font-size:10px;color:#aaa;margin-top:1px;">≈ ${v>=0?'+':''}$${Math.abs(v).toLocaleString("ru-RU",{maximumFractionDigits:0})}</div>` : '';
 
   const rows = ALL_MONTHS.map((m, i) => {
     const monthNum = i + 1;
     const datePrefix = `${yearStr}-${m.num}`;
 
-    const monthInc = incomes
-      .filter(e => e.date && e.date.startsWith(datePrefix))
-      .reduce((s, e) => s + e.amount, 0);
+    const monthInc    = incomes.filter(e => e.date && e.date.startsWith(datePrefix)).reduce((s,e) => s + e.amount, 0);
+    const monthIncUsd = incomes.filter(e => e.date && e.date.startsWith(datePrefix)).reduce((s,e) => s + (e.amountUsd||0), 0);
+    const monthExp    = extras.filter(e => e.date && e.date.startsWith(datePrefix)).reduce((s,e) => s + e.amount, 0);
+    const monthExpUsd = extras.filter(e => e.date && e.date.startsWith(datePrefix)).reduce((s,e) => s + (e.amountUsd||0), 0);
 
-    const monthExp = extras
-      .filter(e => e.date && e.date.startsWith(datePrefix))
-      .reduce((s, e) => s + e.amount, 0);
-
-    const monthProfit = monthInc - monthExp;
+    const monthProfit    = monthInc - monthExp;
+    const monthProfitUsd = monthIncUsd - monthExpUsd;
     const isFuture = monthNum > todayMonth;
 
-    if(!isFuture){ cumulative += monthProfit; totalInc += monthInc; totalExp += monthExp; }
+    if(!isFuture){
+      cumulative += monthProfit; cumulativeUsd += monthProfitUsd;
+      totalInc += monthInc; totalExp += monthExp;
+      totalIncUsd += monthIncUsd; totalExpUsd += monthExpUsd;
+    }
 
-    return { m, monthNum, monthInc, monthExp, monthProfit, cumulative, isFuture,
+    return { m, monthNum, monthInc, monthIncUsd, monthExp, monthExpUsd,
+             monthProfit, monthProfitUsd, cumulative, cumulativeUsd, isFuture,
              isCurrent: monthNum === todayMonth };
   });
 
-  const totalProfit = totalInc - totalExp;
+  const totalProfit    = totalInc - totalExp;
+  const totalProfitUsd = totalIncUsd - totalExpUsd;
 
   const sc = document.getElementById("monthlySummaryCards");
   if(sc) sc.innerHTML = `
     <div class="ms-card purple">
       <div class="ms-label">💰 Приходы за год</div>
       <div class="ms-value">${fmtN(totalInc)} сом</div>
+      ${totalIncUsd>0?`<div class="ms-sub">≈ $${totalIncUsd.toLocaleString("ru-RU",{maximumFractionDigits:0})}</div>`:''}
       <div class="ms-sub">за ${todayMonth} ${todayMonth===1?"месяц":todayMonth<5?"месяца":"месяцев"}</div>
     </div>
     <div class="ms-card red">
       <div class="ms-label">📤 Расходы за год</div>
       <div class="ms-value">${fmtN(totalExp)} сом</div>
+      ${totalExpUsd>0?`<div class="ms-sub">≈ $${totalExpUsd.toLocaleString("ru-RU",{maximumFractionDigits:0})}</div>`:''}
     </div>
     <div class="ms-card ${totalProfit>=0?'':'red'}">
       <div class="ms-label">📈 Чистая прибыль (накоплено)</div>
       <div class="ms-value" style="color:${totalProfit>=0?'#166534':'#c0392b'}">${totalProfit>=0?'+':''}${fmtN(totalProfit)} сом</div>
+      ${totalProfitUsd!==0?`<div class="ms-sub">≈ ${totalProfitUsd>=0?'+':''}$${Math.abs(totalProfitUsd).toLocaleString("ru-RU",{maximumFractionDigits:0})}</div>`:''}
       <div class="ms-sub">нарастающий итог</div>
     </div>`;
 
@@ -1394,20 +1403,20 @@ function renderMonthly(){
     const dash = '<span style="color:#ddd">—</span>';
     return `<tr class="${r.isCurrent?'m-cur':r.isFuture?'m-future':''}">
       <td>${r.m.label}${r.isCurrent?' <span style="font-size:10px;background:#4EA72A;color:#fff;border-radius:10px;padding:1px 6px;font-weight:600;">сейчас</span>':''}</td>
-      <td>${r.monthInc>0?fmtN(r.monthInc)+' сом':dash}</td>
-      <td>${r.monthExp>0?fmtN(r.monthExp)+' сом':dash}</td>
-      <td class="${!hasData?'':r.monthProfit>=0?'m-pos':'m-neg'}">${!hasData?dash:(r.monthProfit>=0?'+':'')+fmtN(r.monthProfit)+' сом'}</td>
-      <td class="${r.isFuture?'':r.cumulative>=0?'m-cum-pos':'m-cum-neg'}">${r.isFuture?dash:(r.cumulative>=0?'+':'')+fmtN(r.cumulative)+' сом'}</td>
+      <td>${r.monthInc>0?fmtN(r.monthInc)+' сом'+fmtUsd(r.monthIncUsd):dash}</td>
+      <td>${r.monthExp>0?fmtN(r.monthExp)+' сом'+fmtUsd(r.monthExpUsd):dash}</td>
+      <td class="${!hasData?'':r.monthProfit>=0?'m-pos':'m-neg'}">${!hasData?dash:(r.monthProfit>=0?'+':'')+fmtN(r.monthProfit)+' сом'+fmtUsd(r.monthProfitUsd)}</td>
+      <td class="${r.isFuture?'':r.cumulative>=0?'m-cum-pos':'m-cum-neg'}">${r.isFuture?dash:(r.cumulative>=0?'+':'')+fmtN(r.cumulative)+' сом'+fmtUsd(r.cumulativeUsd)}</td>
     </tr>`;
   }).join('');
 
   const tfoot = document.getElementById("monthlyFoot");
   if(tfoot) tfoot.innerHTML = `<tr>
     <td>ИТОГО ${currentYear}</td>
-    <td>${fmtN(totalInc)} сом</td>
-    <td>${fmtN(totalExp)} сом</td>
-    <td>${totalProfit>=0?'+':''}${fmtN(totalProfit)} сом</td>
-    <td>${totalProfit>=0?'+':''}${fmtN(totalProfit)} сом</td>
+    <td>${fmtN(totalInc)} сом${fmtUsd(totalIncUsd)}</td>
+    <td>${fmtN(totalExp)} сом${fmtUsd(totalExpUsd)}</td>
+    <td>${totalProfit>=0?'+':''}${fmtN(totalProfit)} сом${fmtUsd(totalProfitUsd)}</td>
+    <td>${totalProfit>=0?'+':''}${fmtN(totalProfit)} сом${fmtUsd(totalProfitUsd)}</td>
   </tr>`;
 }
 
