@@ -1527,6 +1527,7 @@ function renderTable(data){
   const months= QUARTERS[q].labels;
   const qk = QUARTERS[q].keys;
   const search= document.getElementById("search").value.toLowerCase();
+  const yearStr = String(currentYear);
   let html=`<thead><tr>
     <th>Наименование блока</th><th>Наименование направления</th>
     <th>Бюджет (сом)</th>
@@ -1534,9 +1535,12 @@ function renderTable(data){
     <th>Остаток (сом)</th><th>% Освоение</th>
   </tr></thead><tbody>`;
   let gB=0,gM1=0,gM2=0,gM3=0;
+
+  const refDirSet = new Set(data.flatMap(b=>b.dirs.map(d=>b.block+'::'+d.name)));
+
   data.forEach(blk=>{
     let bB=0,bM1=0,bM2=0,bM3=0;
-    const rows=blk.dirs.filter(d=>!search||d.name.toLowerCase().includes(search));
+    const rows=blk.dirs.filter(d=>!search||d.name.toLowerCase().includes(search)||blk.block.toLowerCase().includes(search));
     if(!rows.length)return;
     rows.forEach((dir,di)=>{
       const m1=getVal(dir,qk[0]),m2=getVal(dir,qk[1]),m3=getVal(dir,qk[2]);
@@ -1570,6 +1574,49 @@ function renderTable(data){
       <td class="center">${bP}%</td>
     </tr>`;
   });
+
+  // ── Расходы из Сводки без привязки к Справочнику ──
+  const orphanExtras = extras.filter(e =>
+    !refDirSet.has(e.block+'::'+e.dir) &&
+    (q==='all' || e.quarter === q) &&
+    (!e.date || e.date.startsWith(yearStr))
+  );
+  if(orphanExtras.length > 0){
+    const orphanBlocks = {};
+    orphanExtras.forEach(e => {
+      if(!orphanBlocks[e.block]) orphanBlocks[e.block] = {};
+      if(!orphanBlocks[e.block][e.dir]) orphanBlocks[e.block][e.dir] = {m1:0,m2:0,m3:0};
+      const mk = e.month||'m1';
+      orphanBlocks[e.block][e.dir][mk] = (orphanBlocks[e.block][e.dir][mk]||0) + e.amount;
+    });
+    Object.entries(orphanBlocks).forEach(([blkName, dirs]) => {
+      const dirEntries = Object.entries(dirs).filter(([d])=>!search||d.toLowerCase().includes(search)||blkName.toLowerCase().includes(search));
+      if(!dirEntries.length) return;
+      let bM1=0,bM2=0,bM3=0;
+      dirEntries.forEach(([dirName, vals], di) => {
+        const m1=vals[qk[0]]||0, m2=vals[qk[1]]||0, m3=vals[qk[2]]||0;
+        bM1+=m1; bM2+=m2; bM3+=m3;
+        html+=`<tr>
+          ${di===0?`<td class="block-cell" rowspan="${dirEntries.length}">${blkName}</td>`:''}
+          <td>${dirName}</td>
+          <td class="num" style="color:#aaa;">—</td>
+          <td class="num" style="background:#FCE4D6;color:#00008B;">${m1>0?fmtN(m1):'—'}</td>
+          <td class="num" style="background:#FCE4D6;color:#00008B;">${m2>0?fmtN(m2):'—'}</td>
+          <td class="num" style="background:#FCE4D6;color:#00008B;">${m3>0?fmtN(m3):'—'}</td>
+          <td class="num" style="color:#aaa;">—</td>
+          <td class="center" style="color:#aaa;">—</td>
+        </tr>`;
+      });
+      gM1+=bM1; gM2+=bM2; gM3+=bM3;
+      html+=`<tr class="total-row">
+        <td colspan="2">Итого — ${blkName}</td>
+        <td class="num">—</td>
+        <td class="num">${fmtN(bM1)}</td><td class="num">${fmtN(bM2)}</td><td class="num">${fmtN(bM3)}</td>
+        <td class="num">—</td><td class="center">—</td>
+      </tr>`;
+    });
+  }
+
   const gFact=gM1+gM2+gM3,gP=pct(gFact,gB);
   html+=`<tr class="grand-row">
     <td colspan="2">ИТОГО ОБЩИЙ БЮДЖЕТ</td>
