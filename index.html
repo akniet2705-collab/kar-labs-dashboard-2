@@ -1430,16 +1430,17 @@ function renderCards(data){
   const qk = QUARTERS[q].keys;
   const totalB = data.reduce((s,b)=>s+b.dirs.reduce((ss,d)=>ss+d.budget,0),0);
   const totalF = data.reduce((s,b)=>s+b.dirs.reduce((ss,d)=>ss+getVal(d,qk[0])+getVal(d,qk[1])+getVal(d,qk[2]),0),0);
-  const rem=totalB-totalF, p=pct(totalF,totalB);
-  const filteredInc = filterIncByQ(incomes, q);
-  const totalIncome = filteredInc.reduce((s,e)=>s+e.amount,0);
-  const totalIncUsd = filteredInc.reduce((s,e)=>s+(e.amountUsd||0),0);
-  const netProfit = totalIncome - totalF;
-  // USD для расходов: берём из extras по кварталу
+  // totalFAll — все расходы из сводки по кварталу (без привязки к бюджетной структуре)
   const filteredExp = extras.filter(e => {
     if(q==="all") return !e.date || e.date.startsWith(String(currentYear));
     return e.quarter === q && (!e.date || e.date.startsWith(String(currentYear)));
   });
+  const totalFAll = filteredExp.reduce((s,e)=>s+e.amount,0);
+  const rem=totalB-totalFAll, p=pct(totalFAll,totalB);
+  const filteredInc = filterIncByQ(incomes, q);
+  const totalIncome = filteredInc.reduce((s,e)=>s+e.amount,0);
+  const totalIncUsd = filteredInc.reduce((s,e)=>s+(e.amountUsd||0),0);
+  const netProfit = totalIncome - totalFAll;
   const totalExpUsd = filteredExp.reduce((s,e)=>s+(e.amountUsd||0),0);
   const totalNetUsd = totalIncUsd - totalExpUsd;
   const incCount = filteredInc.length;
@@ -1482,7 +1483,7 @@ function renderCards(data){
     </div>
     <div class="card">
       <div class="card-label">Фактические расходы</div>
-      <div class="card-value">${fmtN(totalF)} сом</div>
+      <div class="card-value">${fmtN(totalFAll)} сом</div>
       <div class="card-sub">Из бюджета: ${p}%${totalExpUsd>0?` · ≈ $${totalExpUsd.toLocaleString("ru-RU",{maximumFractionDigits:0})}`:''}${expCount>0?` · ${expCount} ${expCount===1?"запись":expCount<5?"записи":"записей"}`:''}</div>
       ${prevMonthExp>0?`<div class="card-sub-prev">за ${prevMonthName}: ${fmtN(prevMonthExp)} сом</div>`:''}
     </div>
