@@ -1551,7 +1551,38 @@ function renderTable(data){
 
   const refDirSet = new Set(data.flatMap(b=>b.dirs.map(d=>b.block+'::'+d.name)));
 
-  data.forEach(blk=>{
+  // ── Мёрджим orphan-расходы в существующие блоки (не дублируем блок) ──
+  const orphanExtras = extras.filter(e =>
+    !refDirSet.has(e.block+'::'+e.dir) &&
+    (q==='all' || e.quarter === q) &&
+    (!e.date || e.date.startsWith(yearStr))
+  );
+  const mergedData = data.map(blk => ({...blk, dirs: blk.dirs.map(d=>({...d}))}));
+  const mergedBlockIdx = {};
+  mergedData.forEach((blk,i) => { mergedBlockIdx[blk.block] = i; });
+  if(orphanExtras.length > 0){
+    const orphanAgg = {};
+    orphanExtras.forEach(e => {
+      if(!orphanAgg[e.block]) orphanAgg[e.block] = {};
+      if(!orphanAgg[e.block][e.dir]) orphanAgg[e.block][e.dir] = {m1:0,m2:0,m3:0};
+      const mk = e.month||'m1';
+      orphanAgg[e.block][e.dir][mk] = (orphanAgg[e.block][e.dir][mk]||0) + e.amount;
+    });
+    Object.entries(orphanAgg).forEach(([blkName, dirs]) => {
+      const orphanDirs = Object.entries(dirs).map(([dirName, vals]) => ({
+        name: dirName, budget:0,
+        m1:vals.m1||0, m2:vals.m2||0, m3:vals.m3||0,
+        m4:0, m5:0, m6:0, m7:0, m8:0, m9:0, m10:0, m11:0, m12:0
+      }));
+      if(mergedBlockIdx[blkName] !== undefined){
+        mergedData[mergedBlockIdx[blkName]].dirs.push(...orphanDirs);
+      } else {
+        mergedData.push({block:blkName, color:'#888888', dirs:orphanDirs});
+      }
+    });
+  }
+
+  mergedData.forEach(blk=>{
     let bB=0,bM1=0,bM2=0,bM3=0;
     const rows=blk.dirs.filter(d=>!search||d.name.toLowerCase().includes(search)||blk.block.toLowerCase().includes(search));
     if(!rows.length)return;
@@ -1565,15 +1596,15 @@ function renderTable(data){
         <td class="num" style="color:#00008B;cursor:pointer;position:relative;"
             title="✏ Нажми чтобы изменить бюджет"
             onclick="editBudgetCell(this,'${blk.block}','${dir.name}')">
-          ${fmtN(dir.budget)}&nbsp;<span style="font-size:10px;opacity:.4;">✏</span>
+          ${dir.budget>0?fmtN(dir.budget)+'&nbsp;<span style="font-size:10px;opacity:.4;">✏</span>':'<span style="color:#aaa;">—</span>&nbsp;<span style="font-size:10px;opacity:.4;">✏</span>'}
         </td>
-        <td class="num" style="background:#FCE4D6;color:#00008B;">${fmtN(m1)}</td>
-        <td class="num" style="background:#FCE4D6;color:#00008B;">${fmtN(m2)}</td>
-        <td class="num" style="background:#FCE4D6;color:#00008B;">${fmtN(m3)}</td>
-        <td class="num" style="${rem<0?"color:#c0392b;font-weight:bold;":""}">${fmtN(rem)}</td>
+        <td class="num" style="background:#FCE4D6;color:#00008B;">${m1>0?fmtN(m1):'—'}</td>
+        <td class="num" style="background:#FCE4D6;color:#00008B;">${m2>0?fmtN(m2):'—'}</td>
+        <td class="num" style="background:#FCE4D6;color:#00008B;">${m3>0?fmtN(m3):'—'}</td>
+        <td class="num" style="${rem<0?"color:#c0392b;font-weight:bold;":""}">${dir.budget>0?fmtN(rem):'—'}</td>
         <td class="center">
-          <div style="font-size:11px;margin-bottom:2px;">${p}%</div>
-          <div class="pbar-bg"><div class="pbar ${p>100?"over":""}" style="width:${Math.min(p,100)}%"></div></div>
+          <div style="font-size:11px;margin-bottom:2px;">${dir.budget>0?p+'%':'—'}</div>
+          ${dir.budget>0?`<div class="pbar-bg"><div class="pbar ${p>100?"over":""}" style="width:${Math.min(p,100)}%"></div></div>`:''}
         </td>
       </tr>`;
     });
@@ -1581,54 +1612,12 @@ function renderTable(data){
     const bFact=bM1+bM2+bM3,bP=pct(bFact,bB);
     html+=`<tr class="total-row">
       <td colspan="2">Итого — ${blk.block}</td>
-      <td class="num">${fmtN(bB)}</td>
+      <td class="num">${bB>0?fmtN(bB):'—'}</td>
       <td class="num">${fmtN(bM1)}</td><td class="num">${fmtN(bM2)}</td><td class="num">${fmtN(bM3)}</td>
-      <td class="num">${fmtN(bB-bFact)}</td>
-      <td class="center">${bP}%</td>
+      <td class="num">${bB>0?fmtN(bB-bFact):'—'}</td>
+      <td class="center">${bB>0?bP+'%':'—'}</td>
     </tr>`;
   });
-
-  // ── Расходы из Сводки без привязки к Справочнику ──
-  const orphanExtras = extras.filter(e =>
-    !refDirSet.has(e.block+'::'+e.dir) &&
-    (q==='all' || e.quarter === q) &&
-    (!e.date || e.date.startsWith(yearStr))
-  );
-  if(orphanExtras.length > 0){
-    const orphanBlocks = {};
-    orphanExtras.forEach(e => {
-      if(!orphanBlocks[e.block]) orphanBlocks[e.block] = {};
-      if(!orphanBlocks[e.block][e.dir]) orphanBlocks[e.block][e.dir] = {m1:0,m2:0,m3:0};
-      const mk = e.month||'m1';
-      orphanBlocks[e.block][e.dir][mk] = (orphanBlocks[e.block][e.dir][mk]||0) + e.amount;
-    });
-    Object.entries(orphanBlocks).forEach(([blkName, dirs]) => {
-      const dirEntries = Object.entries(dirs).filter(([d])=>!search||d.toLowerCase().includes(search)||blkName.toLowerCase().includes(search));
-      if(!dirEntries.length) return;
-      let bM1=0,bM2=0,bM3=0;
-      dirEntries.forEach(([dirName, vals], di) => {
-        const m1=vals[qk[0]]||0, m2=vals[qk[1]]||0, m3=vals[qk[2]]||0;
-        bM1+=m1; bM2+=m2; bM3+=m3;
-        html+=`<tr>
-          ${di===0?`<td class="block-cell" rowspan="${dirEntries.length}">${blkName}</td>`:''}
-          <td>${dirName}</td>
-          <td class="num" style="color:#aaa;">—</td>
-          <td class="num" style="background:#FCE4D6;color:#00008B;">${m1>0?fmtN(m1):'—'}</td>
-          <td class="num" style="background:#FCE4D6;color:#00008B;">${m2>0?fmtN(m2):'—'}</td>
-          <td class="num" style="background:#FCE4D6;color:#00008B;">${m3>0?fmtN(m3):'—'}</td>
-          <td class="num" style="color:#aaa;">—</td>
-          <td class="center" style="color:#aaa;">—</td>
-        </tr>`;
-      });
-      gM1+=bM1; gM2+=bM2; gM3+=bM3;
-      html+=`<tr class="total-row">
-        <td colspan="2">Итого — ${blkName}</td>
-        <td class="num">—</td>
-        <td class="num">${fmtN(bM1)}</td><td class="num">${fmtN(bM2)}</td><td class="num">${fmtN(bM3)}</td>
-        <td class="num">—</td><td class="center">—</td>
-      </tr>`;
-    });
-  }
 
   const gFact=gM1+gM2+gM3,gP=pct(gFact,gB);
   html+=`<tr class="grand-row">
