@@ -1283,11 +1283,11 @@ function autoSetQuarterMonth(){
   if(!dateVal) return;
   const month = new Date(dateVal + 'T12:00:00').getMonth() + 1; // 1-12
   const q = Math.ceil(month / 3);        // 1-4
-  const mInQ = month - (q - 1) * 3;     // 1-3
   const qSel = document.getElementById("fQuarter");
   const mSel = document.getElementById("fMonth");
   if(qSel){ qSel.value = 'Q' + q; updateMonths(); }
-  if(mSel){ mSel.value = 'm' + mInQ; }
+  // Use absolute month key (m1-m12) — fMonth options use absolute keys from QUARTERS[q].keys
+  if(mSel){ mSel.value = 'm' + month; }
 }
 
 async function previewRate(){
