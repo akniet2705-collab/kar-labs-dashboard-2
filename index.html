@@ -1569,10 +1569,9 @@ function renderTable(data){
       orphanAgg[e.block][e.dir][mk] = (orphanAgg[e.block][e.dir][mk]||0) + e.amount;
     });
     Object.entries(orphanAgg).forEach(([blkName, dirs]) => {
-      const orphanDirs = Object.entries(dirs).map(([dirName, vals]) => ({
-        name: dirName, budget:0,
-        m1:vals.m1||0, m2:vals.m2||0, m3:vals.m3||0,
-        m4:0, m5:0, m6:0, m7:0, m8:0, m9:0, m10:0, m11:0, m12:0
+      const orphanDirs = Object.entries(dirs).map(([dirName]) => ({
+        name: dirName, _block: blkName, budget:0,
+        m1:0,m2:0,m3:0,m4:0,m5:0,m6:0,m7:0,m8:0,m9:0,m10:0,m11:0,m12:0
       }));
       if(mergedBlockIdx[blkName] !== undefined){
         mergedData[mergedBlockIdx[blkName]].dirs.push(...orphanDirs);
